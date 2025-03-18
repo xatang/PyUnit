@@ -1,0 +1,125 @@
+{% extends "/base.html" %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{{ static('/css/highcharts.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ static('/css/custom_highcharts.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="justify-content-center" style="margin: 0">
+  <div id="chart-container" style="width: 100%; height: 600px;"></div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script src="{{ static('/js/highcharts.js') }}"></script>
+<script src="{{ static('/js/simple-statistics.min.js') }}"></script>
+<script src="{{ static('/js/axios.min.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const chart = Highcharts.chart('chart-container', {
+      chart: {
+        styledMode: true,
+        zooming: {
+          type: 'xy'
+        },
+        events: {
+          load: function () {
+            setInterval(updateChart, {{update_rate}});
+          },
+
+        }
+      },
+      title: {
+        text: ''
+      },
+      xAxis: {
+        type: 'datetime',
+        title: {
+          text: 'Время'
+        },
+        labels: {
+          format: '{value:%H:%M:%S %d.%m.%Y}'
+        },
+      },
+      yAxis: [{
+        title: {
+          text: 'Temperature (°C)',
+        }
+      }, {
+        title: {
+          text: 'Relative humidity (%)'
+        },
+        opposite: true
+      }, { 
+        title: {
+          text: 'Absolute humidity (g/m³)'
+        },
+        opposite: true
+      }],
+      series: JSON.parse({{ series | safe | tojson }})
+    });
+
+  async function updateChart() {
+    try {
+      const response = await axios.post('{{ url }}', {
+      });
+
+      const newData = response.data; 
+      const time = Date.now() + (-new Date().getTimezoneOffset() * 60000);
+
+      for (let i = 0; i < newData.length; i++) {
+        chart.series[i * 5].addPoint([time, newData[i].temperature], true, false);
+        chart.series[i * 5].update({ name: "Temperature " + newData[i].name + ": " + newData[i].temperature + "°C" }, false);
+        chart.series[i * 5 + 1].addPoint([time, newData[i].relative_humidity], true, false);
+        chart.series[i * 5 + 1].update({ name: "Relative humidity " + newData[i].name + ": " + newData[i].relative_humidity + "%" }, false);
+        chart.series[i * 5 + 2].addPoint([time, newData[i].absolute_humidity], true, false);
+        chart.series[i * 5 + 2].update({ name: "Absolute humidity " + newData[i].name + ": " + newData[i].absolute_humidity + "g/m³" }, false);
+      }
+      chart.redraw();
+      updateTrendline(newData.length);
+    } catch (error) {
+      console.error('Error when receiving data:', error);
+    }
+  }
+
+
+  function updateTrendline(new_data_length) {
+
+    for (let y = 0; y < new_data_length; y++) {
+
+      const humidityData = chart.series[y*5+1].data.map(point => [point.x, point.y]);
+      const xValues = humidityData.map((point, index) => index);
+      const yValues = humidityData.map(point => point[1]);
+
+      const regression = ss.linearRegression(
+        xValues.map((x, i) => [x, yValues[i]])
+      );
+      const trendline = xValues.map(x => [
+        humidityData[x][0], 
+        regression.m * x + regression.b 
+      ]);
+
+      chart.series[y*5+3].setData(trendline, false);
+    }
+    for (let y = 0; y < new_data_length; y++) {
+      const humidityData = chart.series[y*5+2].data.map(point => [point.x, point.y]);
+      const xValues = humidityData.map((point, index) => index);
+      const yValues = humidityData.map(point => point[1]);
+
+      const regression = ss.linearRegression(
+        xValues.map((x, i) => [x, yValues[i]])
+      );
+      const trendline = xValues.map(x => [
+        humidityData[x][0],
+        regression.m * x + regression.b 
+      ]);
+
+
+      chart.series[y*5+4].setData(trendline, false);
+    }
+    chart.redraw(); 
+  }
+  });
+</script>
+{% endblock %}

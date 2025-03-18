@@ -1,0 +1,7 @@
+aiohttp_jinja2==1.6
+aiohttp==3.9.5
+simple_pid==2.0.1
+numpy==2.0.0
+simple_pid==2.0.1
+argparse==1.4.0
+requests==2.32.3

@@ -1,0 +1,91 @@
+{
+    "app_ip": "0.0.0.0",
+    "app_port": 5000,
+    "moonraker_api_method": "http",
+    "moonraker_ip": "localhost",
+    "moonraker_port": 7125,
+    "app_log_level": "INFO",
+    "web_log_level": "ERROR",
+    "moonraker_api_key": "cd2cc23d197c41aab39b0cbd6a331448",
+    "idryers": [
+      {
+        "name": "U1",
+        "heater": "heater_generic idryer_u1_heater",
+        "heater_fan": "heater_fan fan_u1",
+        "temperature_sensor": "sht3x idryer_u1_air",
+        "led": "neopixel sprd",
+        "led_brightness": 100,
+        "humidity_open_treshold": 0.1,
+        "humidity_close_treshold": 0.2,
+        "humidity_plateau_duration": 30,
+        "humidity_plateau_window_size": 5,
+        "humidity_timer_drying_range": 1.0,
+        "servo": {
+          "name": "servo srv_u1",
+          "close_angle": 125,
+          "open_angle": 30
+        },
+        "presets": [{
+          "name": "default",
+          "temperature": 60,
+          "max_temperature_delta": 20,
+          "humidity": 10,
+          "dry_time": 60,
+          "storage_temperature": 0,
+          "humidity_storage_dry_time": 10,
+          "humidity_storage_range": 3
+        },
+        {
+          "name": "PLA",
+          "temperature": 50,
+          "max_temperature_delta": 20,
+          "humidity": 10,
+          "dry_time": 180,
+          "storage_temperature": 0,
+          "humidity_storage_dry_time": 10,
+          "humidity_storage_range": 3
+        },
+        {
+          "name": "PETG",
+          "temperature": 65,
+          "max_temperature_delta": 20,
+          "humidity": 10,
+          "dry_time": 240,
+          "storage_temperature": 0,
+          "humidity_storage_dry_time": 10,
+          "humidity_storage_range": 3
+        },
+        {
+          "name": "TPU",
+          "temperature": 60,
+          "max_temperature_delta": 20,
+          "humidity": 10,
+          "dry_time": 300,
+          "storage_temperature": 0,
+          "humidity_storage_dry_time": 10,
+          "humidity_storage_range": 3
+        },
+        {
+          "name": "ABS",
+          "temperature": 80,
+          "max_temperature_delta": 20,
+          "humidity": 10,
+          "dry_time": 300,
+          "storage_temperature": 0,
+          "humidity_storage_dry_time": 10,
+          "humidity_storage_range": 3
+        },
+        {
+          "name": "PA",
+          "temperature": 90,
+          "max_temperature_delta": 20,
+          "humidity": 10,
+          "dry_time": 60,
+          "storage_temperature": 70,
+          "humidity_storage_dry_time": 0,
+          "humidity_storage_range": 0
+        }
+      ]
+      }
+    ]
+  }
