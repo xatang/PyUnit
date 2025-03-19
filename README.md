@@ -51,6 +51,14 @@ Python 3.12 or higher. Lower versions of Python may be supported but have not be
    ```
 6. The service should start. You can access it at ``http://printer_ip:app_port/``
 
+
+>Additionally, you can add the following commands to the Fluidd or Mainsail console filters to avoid a flood of messages during firmware operation.
+```bash
+SET_LED LED=[led_name] INDEX=
+SET_HEATER_TEMPERATURE HEATER=[heater_name]
+SET_SERVO SERVO=[servo_name]
+```
+
 # Control via Klipper Gcode Macro
 
 1. To control the drying process via gcode macro, your printer must have the [gcode_shell_command](https://github.com/dw-0/kiauh/blob/master/docs/gcode_shell_command.md) extension installed.
