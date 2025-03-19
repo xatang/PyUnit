@@ -78,6 +78,8 @@ SET_SERVO SERVO=[servo_name]
 ### http://printer_ip:app_port/chart
 Page displaying only graphs.
 
+> Adding pages as a webcam does not allow you to control the firmware using buttons, as clicks are inactive in the camera area.
+
 # Images
 
 ![Web Panel](./images/Screenshot_1.png)
