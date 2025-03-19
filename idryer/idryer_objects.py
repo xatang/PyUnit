@@ -241,6 +241,7 @@ class iDryer_servo(object):
         if self.current_angle == None:
             logger.debug(f"Current angle for servo '{self.name}' is None. Setting to close angle {self.close_angle}")
             await self.set(self.close_angle)
+            await self.status.update(0)
         while True:
             if self.target_angle > self.current_angle:
                 while self.current_angle < self.target_angle:
