@@ -73,13 +73,13 @@ timeout: 5.
 verbose: True
 [gcode_macro dry_u1]
 gcode:
-    {% set temperature = params.Temperature|default(60)|int %} 
-    {% set max_temperature_delta = params.Max_temperature_delta|default(20)|int%} 
-    {% set humidity = params.Humidity|default(10)|int%}
-    {% set dry_time = params.Dry_time|default(60)|int%}
-    {% set humidity_storage_dry_time = params.Humidity_storage_dry_time|default(10)|int%}
-    {% set humidity_storage_range = params.Humidity_storage_range|default(3)|float%}
-    {% set storage_temperature = params.Storage_temperature|default(0)|int%}
+    {% set temperature = params.TEMPERATURE|default(60)|int %} 
+    {% set max_temperature_delta = params.MAX_TEMPERATURE_DELTA|default(20)|int%} 
+    {% set humidity = params.HUMIDITY|default(10)|int%}
+    {% set dry_time = params.DRY_TIME|default(60)|int%}
+    {% set humidity_storage_dry_time = params.HUMIDITY_STORAGE_DRY_TIME|default(10)|int%}
+    {% set humidity_storage_range = params.HUMIDITY_STORAGE_RANGE|default(3)|float%}
+    {% set storage_temperature = params.STORAGE_TEMPERATURE|default(0)|int%}
     RUN_SHELL_COMMAND CMD=dry_u1 PARAMS="--id 0 --status 1 --temperature {temperature} --max_temperature_delta {max_temperature_delta} --humidity {humidity} --dry_time {dry_time} --storage_temperature {storage_temperature} --humidity_storage_dry_time {humidity_storage_dry_time} --humidity_storage_range {humidity_storage_range}"
 
 [gcode_shell_command pla_u1]
