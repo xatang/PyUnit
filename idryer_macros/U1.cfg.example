@@ -59,18 +59,15 @@ gcode:
     {% set angle = params.ANGLE|default(90)|int %} 
     SET_SERVO SERVO=srv_u1 ANGLE={angle}
 
-[gcode_shell_command off_u1]
+[gcode_shell_command pyuint_api]
 command: /home/orangepi/PyUnit/venv/bin/python3 /home/orangepi/PyUnit/idryer_macros/api.py
 timeout: 5.
 verbose: True
+
 [gcode_macro off_u1]
 gcode:
-    RUN_SHELL_COMMAND CMD=off_u1 PARAMS="--id 0 --status 0"
+    RUN_SHELL_COMMAND CMD=pyuint_api PARAMS="--id 0 --status 0"
 
-[gcode_shell_command dry_u1]
-command: /home/orangepi/PyUnit/venv/bin/python3 /home/orangepi/PyUnit/idryer_macros/api.py
-timeout: 5.
-verbose: True
 [gcode_macro dry_u1]
 gcode:
     {% set temperature = params.TEMPERATURE|default(60)|int %} 
@@ -80,44 +77,24 @@ gcode:
     {% set humidity_storage_dry_time = params.HUMIDITY_STORAGE_DRY_TIME|default(10)|int%}
     {% set humidity_storage_range = params.HUMIDITY_STORAGE_RANGE|default(3)|float%}
     {% set storage_temperature = params.STORAGE_TEMPERATURE|default(0)|int%}
-    RUN_SHELL_COMMAND CMD=dry_u1 PARAMS="--id 0 --status 1 --temperature {temperature} --max_temperature_delta {max_temperature_delta} --humidity {humidity} --dry_time {dry_time} --storage_temperature {storage_temperature} --humidity_storage_dry_time {humidity_storage_dry_time} --humidity_storage_range {humidity_storage_range}"
+    RUN_SHELL_COMMAND CMD=pyuint_api PARAMS="--id 0 --status 1 --temperature {temperature} --max_temperature_delta {max_temperature_delta} --humidity {humidity} --dry_time {dry_time} --storage_temperature {storage_temperature} --humidity_storage_dry_time {humidity_storage_dry_time} --humidity_storage_range {humidity_storage_range}"
 
-[gcode_shell_command pla_u1]
-command: /home/orangepi/PyUnit/venv/bin/python3 /home/orangepi/PyUnit/idryer_macros/api.py
-timeout: 5.
-verbose: True
 [gcode_macro pla_u1]
 gcode:
-    RUN_SHELL_COMMAND CMD=pla_u1 PARAMS="--id 0 --status 1 --preset 1"
+    RUN_SHELL_COMMAND CMD=pyuint_api PARAMS="--id 0 --status 1 --preset 1"
 
-[gcode_shell_command petg_u1]
-command: /home/orangepi/PyUnit/venv/bin/python3 /home/orangepi/PyUnit/idryer_macros/api.py
-timeout: 5.
-verbose: True
 [gcode_macro petg_u1]
 gcode:
-    RUN_SHELL_COMMAND CMD=petg_u1 PARAMS="--id 0 --status 1 --preset 2"
+    RUN_SHELL_COMMAND CMD=pyuint_api PARAMS="--id 0 --status 1 --preset 2"
 
-[gcode_shell_command tpu_u1]
-command: /home/orangepi/PyUnit/venv/bin/python3 /home/orangepi/PyUnit/idryer_macros/api.py
-timeout: 5.
-verbose: True
 [gcode_macro tpu_u1]
 gcode:
-    RUN_SHELL_COMMAND CMD=tpu_u1 PARAMS="--id 0 --status 1 --preset 3"
+    RUN_SHELL_COMMAND CMD=pyuint_api PARAMS="--id 0 --status 1 --preset 3"
 
-[gcode_shell_command abs_u1]
-command: /home/orangepi/PyUnit/venv/bin/python3 /home/orangepi/PyUnit/idryer_macros/api.py
-timeout: 5.
-verbose: True
 [gcode_macro abs_u1]
 gcode:
-    RUN_SHELL_COMMAND CMD=abs_u1 PARAMS="--id 0 --status 1 --preset 4"
+    RUN_SHELL_COMMAND CMD=pyuint_api PARAMS="--id 0 --status 1 --preset 4"
 
-[gcode_shell_command pa_u1]
-command: /home/orangepi/PyUnit/venv/bin/python3 /home/orangepi/PyUnit/idryer_macros/api.py
-timeout: 5.
-verbose: True
 [gcode_macro pa_u1]
 gcode:
-    RUN_SHELL_COMMAND CMD=pa_u1 PARAMS="--id 0 --status 1 --preset 5"
+    RUN_SHELL_COMMAND CMD=pyuint_api PARAMS="--id 0 --status 1 --preset 5"
