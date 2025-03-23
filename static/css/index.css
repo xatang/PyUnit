@@ -78,3 +78,8 @@ iframe {
 .btn-group-presets .btn {
     margin-top: 0;
 }
+
+.card-footer {
+    padding-top: 0;
+    padding-bottom: 0;
+}

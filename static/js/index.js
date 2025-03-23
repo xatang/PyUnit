@@ -63,6 +63,13 @@ async function updateData() {
             document.getElementById('absolute_humidity_' + data_element.id).textContent = data_element.absolute_humidity;
             document.getElementById('relative_humidity_' + data_element.id).textContent = data_element.relative_humidity;
             document.getElementById('time_' + data_element.id).textContent = data_element.time_left;
+            document.getElementById('target_temperature_' + data_element.id).textContent = data_element.target_temperature;
+            document.getElementById('max_temperature_delta_' + data_element.id).textContent = data_element.max_temperature_delta;
+            document.getElementById('target_humidity_' + data_element.id).textContent = data_element.target_humidity;
+            document.getElementById('dry_time_' + data_element.id).textContent = data_element.dry_time;
+            document.getElementById('humidity_storage_dry_time_' + data_element.id).textContent = data_element.humidity_storage_dry_time;
+            document.getElementById('humidity_storage_range_' + data_element.id).textContent = data_element.humidity_storage_range;
+            document.getElementById('storage_temperature_' + data_element.id).textContent = data_element.storage_temperature;
         }
     } catch (error) {
         console.error('Error updating data:', error);
