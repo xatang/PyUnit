@@ -490,7 +490,9 @@ class iDryer(object):
         self.max_temperature_delta: float = 0
         self.humidity_storage_range: float = 0
         self.humidity_storage_dry_time: int = 0
+        self.display_humidity_storage_dry_time: str = self.display_time(self.humidity_storage_dry_time)
         self.dry_time: int = 0
+        self.display_dry_time: str = self.display_time(self.dry_time)
         self.storage_temperature: int = 0
         self.time_left: str = 'N\\A'
         ############################
@@ -575,9 +577,11 @@ class iDryer(object):
                     self.max_temperature_delta = preset.max_temperature_delta
                     self.target_humidity = preset.humidity
                     self.dry_time = preset.dry_time*60
+                    self.display_dry_time = self.display_time(seconds=self.dry_time)
                     self.storage_temperature = preset.storage_temperature
                     self.humidity_storage_range = preset.humidity_storage_range
                     self.humidity_storage_dry_time = preset.humidity_storage_dry_time*60
+                    self.display_humidity_storage_dry_time: str = self.display_time(self.humidity_storage_dry_time)
                     await self.status.update(new_status=1)
                     break
         elif custom_preset != None:
@@ -585,9 +589,11 @@ class iDryer(object):
             self.max_temperature_delta = custom_preset.max_temperature_delta
             self.target_humidity = custom_preset.humidity
             self.dry_time = custom_preset.dry_time*60
+            self.display_dry_time = self.display_time(seconds=self.dry_time)
             self.storage_temperature = custom_preset.storage_temperature
             self.humidity_storage_range = custom_preset.humidity_storage_range
             self.humidity_storage_dry_time = custom_preset.humidity_storage_dry_time*60
+            self.display_humidity_storage_dry_time: str = self.display_time(self.humidity_storage_dry_time)
             await self.status.update(new_status=1)
         elif new_status == 2:
             self.humidity_PID = None
@@ -603,6 +609,11 @@ class iDryer(object):
             self.max_temperature_delta = 0
             self.dry_time = 0
             self.storage_temperature = 0
+            self.target_humidity = self.presets[0].humidity
+            self.humidity_storage_range = 0
+            self.humidity_storage_dry_time = 0
+            self.display_dry_time = self.display_time(self.dry_time)
+            self.display_humidity_storage_dry_time: str = self.display_time(self.humidity_storage_dry_time)
             await self.heater.set(target=0)
             await self.servo.close(ignore_timeout=True)
         await self.status.update(new_status=new_status)

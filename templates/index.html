@@ -104,15 +104,40 @@
                     {% endif %}
                 </div>
             </div>
+            <div class="card-footer">
+                <button class="btn btn-link w-100 text-decoration-none" data-bs-toggle="collapse"
+                    data-bs-target="#params_{{idryer.id}}" aria-expanded="false" aria-controls="params_{{idryer.id}}">
+                    <b>Show Parameters</b>
+                </button>
+                <div class="collapse" id="params_{{idryer.id}}">
+                    <h6 class="card-subtitle mb-2"><b>Target temperature:</b> <span
+                            id="target_temperature_{{idryer.id}}">{{
+                            idryer.target_temperature }}</span>°C</h6>
+                    <h6 class="card-subtitle mb-2"><b>Max temperature delta:</b> <span
+                            id="max_temperature_delta_{{idryer.id}}">{{
+                            idryer.max_temperature_delta }}</span>°C</h6>
+                    <h6 class="card-subtitle mb-2"><b>Target humidity:</b> <span id="target_humidity_{{idryer.id}}">{{
+                            idryer.target_humidity }}</span>%</h6>
+                    <h6 class="card-subtitle mb-2"><b>Dry time:</b> <span id="dry_time_{{idryer.id}}">{{
+                            idryer.display_dry_time }}</span></h6>
+                    <h6 class="card-subtitle mb-2"><b>Humidity storage dry time:</b> <span
+                            id="humidity_storage_dry_time_{{idryer.id}}">{{
+                            idryer.display_humidity_storage_dry_time }}</span></h6>
+                    <h6 class="card-subtitle mb-2"><b>Humidity storage range:</b> <span
+                            id="humidity_storage_range_{{idryer.id}}">{{
+                            idryer.humidity_storage_range }}</span>%</h6>
+                    <h6 class="card-subtitle mb-2"><b>Storage temperature:</b> <span
+                            id="storage_temperature_{{idryer.id}}">{{
+                            idryer.storage_temperature }}</span>°C</h6>
+                </div>
+            </div>
+            {% endfor %}
         </div>
-
-        {% endfor %}
-
     </div>
     <div class="resizer" id="resizer"></div>
     <div class="split-right" id="right">
         <iframe src="chart"></iframe>
-        <div class="overlay" id="overlay"></div> 
+        <div class="overlay" id="overlay"></div>
     </div>
 </div>
 
