@@ -10,7 +10,7 @@ async def moonraker_data_updater(app):
         logger.info("Starting moonraker_data_updater")
         idryers = []
         moonraker_api = Moonraker_api(ip=app.config["moonraker_ip"], port=app.config["moonraker_port"],
-                                    api_key=app.config["moonraker_api_key"], api_method=app.config["moonraker_api_method"])
+                                      api_key=app.config["moonraker_api_key"], api_method=app.config["moonraker_api_method"])
         logger.debug(
             f"Initialized Moonraker_api with IP: {app.config['moonraker_ip']}, Port: {app.config['moonraker_port']}, API Method: {app.config['moonraker_api_method']}")
 
@@ -19,7 +19,8 @@ async def moonraker_data_updater(app):
         while moonraker_api_data_flag:
             try:
                 iDryer_settings = await moonraker_api.get_idryer_settings()
-                heater_max_temp = iDryer_settings[app.config["idryers"][0]['heater']]['max_temp']
+                heater_max_temp = iDryer_settings[app.config["idryers"]
+                                                  [0]['heater']]['max_temp']
             except:
                 logger.error('Cannot connect to Moonraker API')
                 await asyncio.sleep(3)
@@ -78,7 +79,6 @@ async def moonraker_data_updater(app):
         logger.error(
             f"Error during moonraker_data_updater initialization: {e}")
         logger.error(traceback.format_exc())
-            
 
     while True:
         try:

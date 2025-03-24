@@ -4,8 +4,9 @@ import json
 
 config = json.load(open('/home/orangepi/PyUnit/config.json'))
 
+
 def set_status(id, status, preset_id=None, custom_preset=None):
-    url = f'http://{config['moonraker_ip']}:{config['app_port']}/status/{id}'
+    url = f"http://{config['moonraker_ip']}:{config['app_port']}/status/{id}"
     data = {
         'id': id,
         'status': status,
@@ -23,18 +24,28 @@ def set_status(id, status, preset_id=None, custom_preset=None):
     except Exception as error:
         print('Error:', error)
 
+
 def main():
     parser = argparse.ArgumentParser(description="PyUinit Api Script")
     parser.add_argument('--id', type=int, required=True, help="iDryer ID")
-    parser.add_argument('--status', type=int, required=True, help="Status 0 - Pending; 1 - Drying")
-    parser.add_argument('--preset_id', type=int, required=False, help="Preset ID")
-    parser.add_argument('--temperature', type=float, required=False, help="Temperature")
-    parser.add_argument('--max_temperature_delta', type=float, required=False, help="Max temperature delta")
-    parser.add_argument('--humidity', type=int, required=False, help="Humidity")
-    parser.add_argument('--dry_time', type=int, required=False, help="Dry time")
-    parser.add_argument('--storage_temperature', type=int, required=False, help="Storage temperature")
-    parser.add_argument('--humidity_storage_dry_time', type=int, required=False, help="Humidity storage dry time")
-    parser.add_argument('--humidity_storage_range', type=float, required=False, help="Humidity storage dry time")
+    parser.add_argument('--status', type=int, required=True,
+                        help="Status 0 - Pending; 1 - Drying")
+    parser.add_argument('--preset_id', type=int,
+                        required=False, help="Preset ID")
+    parser.add_argument('--temperature', type=float,
+                        required=False, help="Temperature")
+    parser.add_argument('--max_temperature_delta', type=float,
+                        required=False, help="Max temperature delta")
+    parser.add_argument('--humidity', type=int,
+                        required=False, help="Humidity")
+    parser.add_argument('--dry_time', type=int,
+                        required=False, help="Dry time")
+    parser.add_argument('--storage_temperature', type=int,
+                        required=False, help="Storage temperature")
+    parser.add_argument('--humidity_storage_dry_time', type=int,
+                        required=False, help="Humidity storage dry time")
+    parser.add_argument('--humidity_storage_range', type=float,
+                        required=False, help="Humidity storage dry time")
     args = parser.parse_args()
     custom_preset = {
         'temperature': args.temperature,

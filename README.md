@@ -29,7 +29,7 @@ Humidity maintenance mode with temperature control. Activated after Timer drying
 
 # Requirements
 
-Python 3.12 or higher. Lower versions of Python may be supported but have not been tested.
+Python 3.11 or higher. Lower versions of Python may be supported but have not been tested.
 
 # Installation
 
