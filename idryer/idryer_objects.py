@@ -168,7 +168,7 @@ class iDryer_temperature_sensor(object):
 class IDryer_servo_status(object):
     def __init__(self, status: int):
         self.status = status
-        self.servo_state_change_timeout = 3
+        self.servo_state_change_timeout = 5
         self.last_state_change_time = time.time()
         logger.info(
             f"Initialized IDryer_servo_status with status={self.status} ({str(self)})")
@@ -716,10 +716,14 @@ class iDryer(object):
                         list(humidity_values)[i:i + self.humidity_plateau_window_size])
                     for i in range(self.humidity_plateau_duration - self.humidity_plateau_window_size + 1)
                 ]
-                if self.servo.status == 0 and is_plateau(smoothed_values, self.humidity_open_treshold):
-                    await self.servo.open()
-                if self.servo.status == 1 and is_falling_stopped(smoothed_values, self.humidity_close_treshold):
-                    await self.servo.close()
+                if is_plateau(smoothed_values, self.humidity_open_treshold) and is_falling_stopped(smoothed_values, self.humidity_close_treshold):
+                    if self.servo.status == 1:
+                        await self.servo.close()
+                else:
+                    if self.servo.status == 0 and is_plateau(smoothed_values, self.humidity_open_treshold):
+                        await self.servo.open()
+                    if self.servo.status == 1 and is_falling_stopped(smoothed_values, self.humidity_close_treshold):
+                        await self.servo.close()
 
         ##################################
         if self.storage_temperature == 0:
