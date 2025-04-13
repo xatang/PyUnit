@@ -810,7 +810,10 @@ class iDryer(object):
             self.humidity_PID = IDryer_humidty_PID(
                 target_humidity=self.target_humidity, min_temperature=min_temperature, max_temperature=max_temperature)
         pid_result = await self.humidity_PID.get(self.temperature_sensor.median_relative_humidity)
-        await self.heater.set(pid_result)
+        if pid_result == min_temperature:
+            await self.pid_heat(min_temperature=min_temperature, target_temperature=min_temperature)
+        else:
+            await self.heater.set(pid_result)
 
     def display_time(self, seconds, granularity=5):
         intervals = (
