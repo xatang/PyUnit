@@ -6,6 +6,7 @@
 
 {% block content %}
 <div class="split-container">
+    <!-- Левый блок с карточками -->
     <div class="split-left" id="left">
         {% for idryer in idryers %}
         <div class="card">
@@ -131,24 +132,33 @@
                             idryer.storage_temperature }}</span>°C</h6>
                 </div>
             </div>
-            {% endfor %}
         </div>
-    </div>
+
+        {% endfor %}
+
+    </div> <!-- Закрываем split-left ПОСЛЕ цикла -->
+
+    <!-- Разделитель -->
     <div class="resizer" id="resizer"></div>
+    
+    <!-- Правый блок с графиком -->
     <div class="split-right" id="right">
-        <iframe src="chart"></iframe>
+        <iframe src="chart" id="chart-iframe"></iframe>
         <div class="overlay" id="overlay"></div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block javascript %}
 <script src="{{ static('/js/index.js') }}"></script>
-
 <script>
     setInterval(updateData, {{ update_rate }});
     updateData();
+    
+    // Инициализация высоты iframe после загрузки
+    window.addEventListener('load', () => {
+        const iframe = document.getElementById('chart-iframe');
+        iframe.style.height = window.innerHeight + 'px';
+    });
 </script>
-
 {% endblock %}

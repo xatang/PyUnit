@@ -1,3 +1,26 @@
+window.addEventListener('DOMContentLoaded', () => {
+    // Инициализация размеров
+    const container = document.querySelector('.split-container');
+    const savedLeftWidth = localStorage.getItem('leftWidth');
+    
+    if (savedLeftWidth) {
+        left.style.width = `${savedLeftWidth}px`;
+        left.style.flex = '0 0 auto';
+        right.style.flex = `1 1 calc(100% - ${savedLeftWidth}px)`;
+    } else {
+        // Значение по умолчанию
+        const defaultLeftWidth = container.clientWidth * 0.4;
+        left.style.width = `${defaultLeftWidth}px`;
+        localStorage.setItem('leftWidth', defaultLeftWidth);
+    }
+    
+    // Обновление высоты iframe при изменении размеров
+    window.addEventListener('resize', () => {
+        const iframe = document.getElementById('chart-iframe');
+        iframe.style.height = window.innerHeight + 'px';
+    });
+});
+
 const resizer = document.getElementById('resizer');
 const left = document.getElementById('left');
 const right = document.getElementById('right');
