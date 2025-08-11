@@ -1,21 +1,34 @@
 .split-container {
     display: flex;
     height: 100vh;
+    width: 100%;
+    overflow: hidden; /* Добавлено */
 }
+
 .split-left {
-    flex: 1;
-    overflow: auto;
+    flex: 0 0 auto;
+    overflow-y: auto; /* Только вертикальный скролл */
+    width: 40%;
+    min-width: 300px; /* Минимальная ширина */
+    max-width: 70%; /* Максимальная ширина */
+    height: 100vh; /* Занимает всю высоту */
 }
+
 .split-right {
-    flex: 2;
+    flex: 1;
     overflow: hidden;
     position: relative;
+    height: 100vh; /* Занимает всю высоту */
 }
+
 .resizer {
     width: 10px;
     background: #282b30;
     cursor: ew-resize;
+    flex-shrink: 0; /* Не сжимается */
+    z-index: 100; /* Над другими элементами */
 }
+
 iframe {
     width: 100%;
     height: 100%;

@@ -3,11 +3,25 @@
 {% block css %}
 <link rel="stylesheet" type="text/css" href="{{ static('/css/highcharts.css') }}">
 <link rel="stylesheet" type="text/css" href="{{ static('/css/custom_highcharts.css') }}">
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Убираем скролл */
+        background-color: #1f1f1f; /* Цвет фона основной страницы */
+    }
+    
+    #chart-container {
+        width: 100%;
+        height: 100vh; /* Занимает всю высоту */
+        padding: 10px;
+        box-sizing: border-box;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="justify-content-center" style="margin: 0">
-  <div id="chart-container" style="width: 100%; height: 600px;"></div>
+<div id="chart-container"></div>
 </div>
 {% endblock %}
 
