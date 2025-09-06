@@ -29,9 +29,9 @@ class StatusHandler(web.View):
             return web.Response(status=405)
         try:
             status = int(data.get('status'))
-            if status < 0 or status > 1:
-                raise TypeError
-        except TypeError:
+            if status < 0 or status > 4:
+                raise ValueError("Status must be between 0 and 4")
+        except (TypeError, ValueError):
             self.request.app.logger.warning(
                 f"Invalid status value: {data.get('status')}. Returning 406")
             return web.Response(status=406)
