@@ -57,7 +57,7 @@ class StatusHandler(web.View):
                     custom_preset['storage_temperature'])
                 humidity_storage_range = float(
                     custom_preset['humidity_storage_range'])
-                humidity_storage_dry_time = float(
+                humidity_storage_dry_time = int()(
                     custom_preset['humidity_storage_dry_time'])
             except TypeError:
                 self.request.app.logger.warning(
