@@ -1,0 +1,12 @@
+import Highcharts from '../../Core/Globals.js';
+import '../../Data/Connectors/CSVConnector.js';
+import '../../Data/Connectors/JSONConnector.js';
+import '../../Data/Connectors/GoogleSheetsConnector.js';
+import '../../Data/Connectors/HTMLTableConnector.js';
+import '../../Data/Modifiers/ChainModifier.js';
+import '../../Data/Modifiers/InvertModifier.js';
+import '../../Data/Modifiers/MathModifier.js';
+import '../../Data/Modifiers/RangeModifier.js';
+import '../../Data/Modifiers/SortModifier.js';
+import '../../Data/Modifiers/FilterModifier.js';
+export default Highcharts;
