@@ -1,0 +1,73 @@
+[heater_generic idryer_u1_heater]
+heater_pin: H_U1
+max_power: 1
+sensor_type: NTC 100K MGB18-104F39050L32 
+sensor_pin: T_U1
+control: pid
+pwm_cycle_time: 0.3
+min_temp: 0
+max_temp: 115
+pid_Kp=41.977
+pid_Ki=3.372
+pid_Kd=130.652
+
+[verify_heater idryer_u1_heater]
+max_error: 240
+check_gain_time: 120
+hysteresis: 5
+heating_gain: 1
+
+[heater_fan fan_u1]
+pin: FAN_U1
+max_power: 1.0
+shutdown_speed:1.0
+kick_start_time: 0.5
+heater: idryer_u1_heater
+heater_temp: 50.0
+fan_speed: 1.0
+off_below: 0
+
+[temperature_sensor idryer_u1_air]
+sensor_type: SHT3X
+
+i2c_address: 68
+i2c_software_sda_pin: gpio20 
+i2c_software_scl_pin: gpio21 
+
+[gcode_macro QUERY_IDRYER_U1]
+gcode:
+    {action_respond_info("U1 temperature: %.2f C, Humidity: %.2f%%" % (
+        printer["sht3x idryer_u1_air"].temperature,
+        printer["sht3x idryer_u1_air"].humidity))}
+
+[neopixel sprd]
+pin: NEOPIXEL0
+chain_count: 4
+color_order: GRB
+initial_RED: 0.00
+initial_GREEN: 0.26
+initial_BLUE: 0.00
+
+[servo srv_u1]
+pin: SRV_U1
+maximum_servo_angle: 180
+minimum_pulse_width: 0.00055
+maximum_pulse_width: 0.002
+
+[gcode_macro servo_u1]
+gcode:
+    {% set angle = params.ANGLE|default(90)|int %} 
+    SET_SERVO SERVO=srv_u1 ANGLE={angle}
+
+[gcode_shell_command pyuint_api]
+command: /home/orangepi/PyUnit/venv/bin/python3 /home/orangepi/PyUnit/config_and_macros/idryer_api.py
+timeout: 5.
+verbose: True
+
+[gcode_macro off_u1]
+gcode:
+    RUN_SHELL_COMMAND CMD=pyuint_api PARAMS="--id 0"
+
+[gcode_macro pla_u1]
+gcode:
+    RUN_SHELL_COMMAND CMD=pyuint_api PARAMS="--id 0 --preset 0"

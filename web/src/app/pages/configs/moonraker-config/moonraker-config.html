@@ -1,0 +1,120 @@
+<div class="card config-card">
+    <div class="card-header bg-warning text-white">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-sliders me-2"></i>Connection Parameters
+        </h5>
+    </div>
+    <div class="card-body position-relative" style="min-height: 400px;">
+        <!-- Loading indicator with animation -->
+        <div class="loading-overlay"
+             [class.loading-visible]="isLoading"
+             [class.loading-hidden]="!isLoading">
+            <div class="loading-content">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 mb-0">Loading configuration...</p>
+            </div>
+        </div>
+
+        <!-- Main content with animation -->
+        <div class="content-container"
+             [class.content-visible]="!isLoading"
+             [class.content-hidden]="isLoading">
+            <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
+
+                <!-- Moonraker API Method -->
+                <div class="mb-4">
+                    <label for="moonrakerApiMethod" class="form-label required-field">Moonraker API Method</label>
+                    <select class="form-select" id="moonrakerApiMethod"
+                            formControlName="moonraker_api_method"
+                            [class.is-invalid]="configForm.get('moonraker_api_method')?.invalid && configForm.get('moonraker_api_method')?.touched">
+                        <option value="http">HTTP</option>
+                        <option value="https">HTTPS</option>
+                    </select>
+                    <div *ngIf="configForm.get('moonraker_api_method')?.invalid && configForm.get('moonraker_api_method')?.touched"
+                         class="invalid-feedback">
+                        Connection method is required
+                    </div>
+                    <div class="form-text">Select the connection method for Moonraker API</div>
+                </div>
+
+                <!-- Moonraker IP Address -->
+                <div class="mb-4">
+                    <label for="moonrakerIp" class="form-label required-field">Moonraker IP Address</label>
+                    <input type="text" class="form-control" id="moonrakerIp"
+                           formControlName="moonraker_ip"
+                           placeholder="Enter IP address"
+                           [class.is-invalid]="configForm.get('moonraker_ip')?.invalid && configForm.get('moonraker_ip')?.touched">
+                    <div *ngIf="configForm.get('moonraker_ip')?.invalid && configForm.get('moonraker_ip')?.touched"
+                         class="invalid-feedback">
+                        <div *ngIf="configForm.get('moonraker_ip')?.errors?.['required']">IP address is required</div>
+                        <div *ngIf="configForm.get('moonraker_ip')?.errors?.['pattern']">Enter a valid IP address (e.g., 192.168.1.1)</div>
+                    </div>
+                    <div class="form-text">Specify the Moonraker server IP address (e.g., 127.0.0.1 or 192.168.1.100)</div>
+                </div>
+
+                <!-- Moonraker Port -->
+                <div class="mb-4">
+                    <label for="moonrakerPort" class="form-label required-field">Moonraker Port</label>
+                    <input type="number" class="form-control" id="moonrakerPort"
+                           formControlName="moonraker_port"
+                           placeholder="Enter port"
+                           [class.is-invalid]="configForm.get('moonraker_port')?.invalid && configForm.get('moonraker_port')?.touched">
+                    <div *ngIf="configForm.get('moonraker_port')?.invalid && configForm.get('moonraker_port')?.touched"
+                         class="invalid-feedback">
+                        <div *ngIf="configForm.get('moonraker_port')?.errors?.['required']">Port is required</div>
+                        <div *ngIf="configForm.get('moonraker_port')?.errors?.['min']">Port cannot be negative or zero</div>
+                        <div *ngIf="configForm.get('moonraker_port')?.errors?.['max']">Port cannot exceed 65535</div>
+                    </div>
+                    <div class="form-text">Specify the port used by Moonraker (usually 7125)</div>
+                </div>
+
+                <!-- Moonraker API Key -->
+                <div class="mb-4">
+                    <label for="moonrakerApiKey" class="form-label">Moonraker API Key</label>
+                    <div class="input-group">
+                        <input [type]="showApiKey ? 'text' : 'password'"
+                               class="form-control"
+                               id="moonrakerApiKey"
+                               formControlName="moonraker_api_key"
+                               placeholder="Enter API key">
+                        <button class="btn btn-outline-secondary"
+                                type="button"
+                                (click)="toggleApiKeyVisibility()">
+                            <i class="bi" [class.bi-eye]="!showApiKey" [class.bi-eye-slash]="showApiKey"></i>
+                        </button>
+                    </div>
+                    <div class="form-text">Optional: specify the API key if it is set in Moonraker</div>
+                </div>
+
+                <!-- Connection test result -->
+                <div *ngIf="testResult" class="alert mt-3 test-result-animation"
+                     [class.alert-success]="testResult.success"
+                     [class.alert-danger]="!testResult.success">
+                    <i class="bi me-2"
+                       [class.bi-check-circle]="testResult.success"
+                       [class.bi-exclamation-circle]="!testResult.success"></i>
+                    {{ testResult.message }}
+                </div>
+
+                <!-- Action buttons -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button type="button" class="btn btn-outline-secondary me-md-2"
+                            (click)="testConnection()"
+                            [disabled]="isTesting || configForm.invalid">
+                        <span *ngIf="isTesting" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        <i *ngIf="!isTesting" class="bi bi-plug me-1"></i>
+                        {{ isTesting ? 'Testing...' : 'Test Connection' }}
+                    </button>
+                    <button type="submit" class="btn btn-primary"
+                            [disabled]="configForm.invalid || isLoading">
+                        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        <i *ngIf="!isLoading" class="bi bi-check-circle me-1"></i>
+                        {{ isLoading ? 'Saving...' : 'Save Settings' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

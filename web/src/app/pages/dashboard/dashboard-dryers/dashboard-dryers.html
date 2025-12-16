@@ -1,0 +1,65 @@
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+  <h2 class="card-title d-flex align-items-center gap-2"><i class="bi bi-speedometer2 text-primary"></i><span>Status</span></h2>
+    <div class="small text-muted">
+  <span *ngIf="lastUpdated">Updated: {{ lastUpdated }}</span>
+    </div>
+  </div>
+  <div *ngIf="summaries.length===0" class="skeleton-wrapper dryer-grid grid-2">
+    <div class="skeleton-card" *ngFor="let i of [1,2,3]">
+      <div class="skeleton-line long"><span class="skeleton-shimmer"></span></div>
+      <div class="skeleton-line medium"><span class="skeleton-shimmer"></span></div>
+      <div class="skeleton-line short"><span class="skeleton-shimmer"></span></div>
+      <div class="skeleton-line medium"><span class="skeleton-shimmer"></span></div>
+    </div>
+  </div>
+  <div class="dryer-grid" *ngIf="summaries.length>0" [class.grid-2]="summaries.length>1" [class.grid-3]="summaries.length>2">
+    <div class="dryer-card" *ngFor="let s of summaries; trackBy: trackByDryer">
+      <div class="dryer-header-line d-flex align-items-center gap-2 flex-wrap">
+        <div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1">
+          <h3 class="dryer-name m-0">{{ s.name || ('Dryer #' + s.dryerId) }}</h3>
+          <span *ngIf="s.status!=='pending' && (s.currentPresetName || true)" class="badge bg-info text-dark" [title]="s.currentPresetName ? 'Active preset' : 'Preset loading'">
+            {{ s.currentPresetName || '...' }}
+          </span>
+        </div>
+        <span class="dryer-status-inline ms-auto" [ngClass]="getStatusClass(s)">{{ getStatusLabel(s) }}</span>
+      </div>
+      <div class="dryer-data two-rows">
+        <div class="row-top d-flex flex-wrap gap-3">
+          <div class="data-item">
+            <div class="data-value temp-value"><i class="bi bi-thermometer-half me-1"></i>{{ s.temperature?.toFixed(1) || '-' }}°C</div>
+          </div>
+          <div class="data-item">
+            <div class="data-value humidity-value">
+              <i class="bi bi-droplet-half me-1"></i>{{ s.humidity?.toFixed(1) || '-' }}%
+            </div>
+          </div>
+          <div class="data-item" *ngIf="s.timeLeftDryingSeconds!=null">
+            <div class="data-value time-left-value" title="Remaining drying time"><i class="bi bi-clock me-1"></i>{{ formatTimeLeft(s.timeLeftDryingSeconds) }}</div>
+          </div>
+        </div>
+        <div class="row-bottom d-flex flex-wrap gap-3 mt-1">
+          <div class="data-item" *ngIf="s.heaterOn!==undefined">
+            <div class="data-value d-flex align-items-center" [class.text-danger]="s.heaterOn" [class.text-muted]="!s.heaterOn">
+              <i class="bi me-1" [ngClass]="s.heaterOn ? 'bi-fire' : 'bi-fire text-muted'"></i>
+              <span>{{ s.heaterOn ? 'ON' : 'OFF' }}</span>
+            </div>
+          </div>
+          <div class="data-item" *ngIf="s.servoOpen!==undefined">
+            <div class="data-value d-flex align-items-center" [class.text-primary]="s.servoOpen" [class.text-muted]="!s.servoOpen">
+              <i class="bi me-1" [ngClass]="s.servoOpen ? 'bi-door-open' : 'bi-door-closed'"></i>
+              <span>{{ s.servoOpen ? 'OPEN' : 'CLOSED' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    <div class="controls">
+  <button class="btn btn-primary btn-sm" [routerLink]="['/dashboard', s.dryerId]">Control</button>
+  <button class="btn btn-danger btn-sm" [disabled]="stopping[s.dryerId] || s.status==='pending'" (click)="onStop(s)">
+    <span *ngIf="!stopping[s.dryerId]">Stop</span>
+    <span *ngIf="stopping[s.dryerId]" class="spinner-border spinner-border-sm"></span>
+  </button>
+      </div>
+    </div>
+  </div>
+</div>

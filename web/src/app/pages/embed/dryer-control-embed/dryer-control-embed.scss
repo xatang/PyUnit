@@ -1,0 +1,244 @@
+/**
+ * Embedded control view styles - Fully responsive for Klipper HTTP camera
+ * Adapts to any screen resolution
+ */
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.embed-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: clamp(10px, 2vw, 20px);
+  background: linear-gradient(135deg, #1a1d23 0%, #2a2d33 100%);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.embed-header {
+  flex-shrink: 0;
+  margin-bottom: clamp(8px, 1.5vw, 14px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.embed-title {
+  font-size: clamp(14px, 2.2vw, 20px);
+  font-weight: 600;
+  color: #f0f0f2;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+
+  i {
+    color: #0d6efd;
+    font-size: clamp(16px, 2.5vw, 22px);
+    flex-shrink: 0;
+  }
+}
+
+.dryer-status-badge {
+  padding: clamp(3px, 0.6vw, 5px) clamp(8px, 1.5vw, 14px);
+  border-radius: clamp(10px, 1.5vw, 14px);
+  font-size: clamp(10px, 1.5vw, 13px);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.status-pending {
+    background: rgba(108, 117, 125, 0.2);
+    color: #adb5bd;
+  }
+
+  &.status-active {
+    background: rgba(13, 202, 240, 0.2);
+    color: #0dcaf0;
+  }
+}
+
+.embed-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.5vw, 14px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.status-summary {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: clamp(6px, 1vw, 10px);
+  padding: clamp(8px, 1.5vw, 14px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1vw, 10px);
+  flex-shrink: 0;
+}
+
+.metric-row {
+  display: flex;
+  gap: clamp(10px, 2vw, 18px);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.metric-item {
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 0.8vw, 8px);
+
+  i {
+    font-size: clamp(16px, 2.2vw, 20px);
+  }
+
+  &.time-left {
+    flex: 1;
+    justify-content: center;
+    min-width: 100%;
+  }
+}
+
+.metric-value {
+  font-size: clamp(13px, 2vw, 18px);
+  font-weight: 600;
+  color: #f0f0f2;
+}
+
+.current-preset {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(2px, 0.5vw, 6px);
+
+  .badge {
+    font-size: clamp(11px, 1.6vw, 14px);
+    padding: clamp(3px, 0.6vw, 5px) clamp(8px, 1.2vw, 12px);
+  }
+}
+
+.presets-section {
+  flex-shrink: 0;
+}
+
+.section-label {
+  font-size: clamp(11px, 1.6vw, 14px);
+  font-weight: 600;
+  color: #adb5bd;
+  margin-bottom: clamp(6px, 1vw, 10px);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(80px, 12vw, 110px), 1fr));
+  gap: clamp(4px, 0.8vw, 8px);
+}
+
+.preset-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #dedce0;
+  padding: clamp(6px, 1vw, 10px) clamp(8px, 1.5vw, 14px);
+  border-radius: clamp(4px, 0.8vw, 8px);
+  font-size: clamp(11px, 1.6vw, 14px);
+  transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  &.selected {
+    background: rgba(13, 110, 253, 0.3);
+    border-color: #0d6efd;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.controls-section {
+  display: flex;
+  gap: clamp(6px, 1vw, 10px);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.btn-control {
+  flex: 1;
+  padding: clamp(10px, 1.5vw, 14px);
+  font-size: clamp(13px, 1.8vw, 16px);
+  font-weight: 600;
+  border-radius: clamp(6px, 1vw, 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(3px, 0.6vw, 6px);
+
+  i {
+    font-size: clamp(14px, 2vw, 18px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Responsive adjustments for very small screens
+@media (max-width: 480px) {
+  .metric-row {
+    gap: 8px;
+  }
+
+  .presets-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  }
+}
+
+@media (max-height: 400px) {
+  .status-summary {
+    padding: 6px 10px;
+    gap: 4px;
+  }
+
+  .metric-row {
+    gap: 8px;
+  }
+
+  .section-label {
+    margin-bottom: 4px;
+  }
+}
+
+// Toast container positioning for embed
+::ng-deep {
+  .toast-container {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    z-index: 9999;
+  }
+}

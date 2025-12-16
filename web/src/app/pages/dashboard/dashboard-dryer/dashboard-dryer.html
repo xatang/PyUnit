@@ -1,0 +1,183 @@
+<div class="dryer-detail-page" *ngIf="isValidId(); else invalidId">
+	<div class="page-header mb-3">
+		<a routerLink="/dashboard" class="btn btn-outline-secondary w-100 text-center">
+			<i class="bi bi-arrow-left me-2"></i>Back
+		</a>
+	</div>
+
+	<div class="top-cards d-grid gap-3 mb-3">
+		<!-- Status Card -->
+				<div class="card status-card p-3" *ngIf="summary as sm; else loadingSummary">
+				<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+						<div class="d-flex align-items-center gap-2 flex-wrap">
+							<h3 class="dryer-name m-0">{{ sm.name || ('Dryer '+dryerId) }}</h3>
+							<span *ngIf="['drying','timer_drying','humidity_storage','temperature_storage'].includes(sm.status||'')" class="badge bg-info text-dark">{{ sm.currentPresetName || '...' }}</span>
+						</div>
+					<span class="dryer-status-inline" [ngClass]="getStatusClass()">{{ getStatusLabel() }}</span>
+			</div>
+			<div class="dryer-data two-rows mb-2">
+				<div class="row-top d-flex flex-wrap gap-3">
+							<div class="data-item"><div class="data-value temp-value"><i class="bi bi-thermometer-half me-1"></i>{{ sm.temperature !== undefined ? sm.temperature.toFixed(1) : '--.-' }}°C</div></div>
+							<div class="data-item"><div class="data-value humidity-value"><i class="bi bi-droplet-half me-1"></i>{{ sm.humidity !== undefined ? sm.humidity.toFixed(1) : '--.-' }}%</div></div>
+							<div class="data-item" *ngIf="sm.timeLeftDryingSeconds!=null"><div class="data-value time-left-value" title="Remaining drying time"><i class="bi bi-clock me-1"></i>{{ formatTimeLeft(sm.timeLeftDryingSeconds) }}</div></div>
+				</div>
+				<div class="row-bottom d-flex flex-wrap gap-3 mt-1">
+							<div class="data-item" *ngIf="sm.heaterOn !== undefined"><div class="data-value d-flex align-items-center" [class.text-danger]="sm.heaterOn" [class.text-muted]="!sm.heaterOn"><i class="bi bi-fire me-1" [ngClass]="sm.heaterOn ? 'bi-fire' : 'bi-fire text-muted'"></i><span>{{ sm.heaterOn ? 'ON' : 'OFF' }}</span></div></div>
+							<div class="data-item" *ngIf="sm.servoOpen !== undefined"><div class="data-value d-flex align-items-center" [class.text-primary]="sm.servoOpen" [class.text-muted]="!sm.servoOpen"><i class="bi me-1" [ngClass]="sm.servoOpen ? 'bi-door-open' : 'bi-door-closed'"></i><span>{{ sm.servoOpen ? 'OPEN' : 'CLOSED' }}</span></div></div>
+				</div>
+			</div>
+			<div class="controls d-flex gap-2">
+					<button class="btn btn-primary btn-sm" [disabled]="!selectedPresetId || starting" (click)="onStart()">
+						<span *ngIf="!starting">Start</span>
+						<span *ngIf="starting" class="spinner-border spinner-border-sm"></span>
+					</button>
+					<button class="btn btn-danger btn-sm" [disabled]="!summary || summary.status!=='drying'" (click)="onStop()">Stop</button>
+			</div>
+		</div>
+			<ng-template #loadingSummary>
+				<div class="card status-card p-3 text-muted small">Loading summary...</div>
+			</ng-template>
+
+		<!-- Presets List Card -->
+				<div class="card presets-card p-3">
+					<div class="d-flex justify-content-between align-items-center mb-2">
+						<h3 class="m-0 fs-5">Presets</h3>
+					</div>
+					<div class="presets-buttons" *ngIf="filteredPresets.length>0; else noPresets">
+						<button type="button" class="btn btn-sm preset-btn"
+							*ngFor="let p of filteredPresets"
+							(click)="onSelectPreset(p)"
+							[class.selected]="selectedPresetId===p.id">
+							{{ p.name }}
+						</button>
+					</div>
+					<ng-template #noPresets><div class="text-muted small">(no presets)</div></ng-template>
+				</div>
+	</div>
+
+	<!-- Chart Card -->
+	<div class="card chart-card p-3 mb-3">
+		<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+			<h3 class="m-0 fs-5 d-flex align-items-center gap-2"><i class="bi bi-graph-up text-primary"></i><span>Temperature & Humidity</span></h3>
+			<div class="btn-group btn-group-sm" role="group" aria-label="range selector">
+				<button *ngFor="let r of timeRangeOptions" (click)="onRangeChange(r.key)" type="button"
+					class="btn btn-outline-secondary" [class.active]="timeRange===r.key">{{ r.label }}</button>
+			</div>
+		</div>
+		<div id="singleDryerChart" style="width:100%; height:550px;"></div>
+	</div>
+
+	<!-- G-code Macros Card -->
+	<div class="card macros-card p-3 mb-3">
+		<div class="d-flex justify-content-between align-items-center mb-2 clickable" (click)="toggleMacros()" style="cursor: pointer;">
+			<h3 class="m-0 fs-5 d-flex align-items-center gap-2">
+				<i class="bi bi-code-square text-info"></i>
+				<span>Klipper G-code Macros</span>
+			</h3>
+			<i class="bi" [ngClass]="macrosExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+		</div>
+		<div class="macros-content" *ngIf="macrosExpanded">
+			<!-- Script path editor -->
+			<div class="mb-3">
+				<label class="form-label small text-muted mb-1">Python Script Path:</label>
+				<input type="text" class="form-control form-control-sm" [(ngModel)]="pythonScriptPath"
+					placeholder="/home/orangepi/PyUnit/venv/bin/python3 /home/orangepi/PyUnit/config_and_macros/idryer_api.py"
+					style="font-family:monospace; font-size:.85rem;">
+			</div>
+
+			<!-- Shell command macro -->
+			<div class="macro-block mb-3">
+				<div class="d-flex justify-content-between align-items-center mb-1">
+					<strong>Shell Command Definition</strong>
+					<button class="btn btn-sm btn-outline-secondary" (click)="copyMacro(generateShellCommandMacro())">
+						<i class="bi bi-clipboard"></i>
+					</button>
+				</div>
+				<pre class="macro-code">{{ generateShellCommandMacro() }}</pre>
+			</div>
+
+			<!-- Off macro -->
+			<div class="macro-block mb-3">
+				<div class="d-flex justify-content-between align-items-center mb-1">
+					<strong>Stop/Reset Macro</strong>
+					<button class="btn btn-sm btn-outline-secondary" (click)="copyMacro(generateOffMacro())">
+						<i class="bi bi-clipboard"></i>
+					</button>
+				</div>
+				<pre class="macro-code">{{ generateOffMacro() }}</pre>
+			</div>
+
+			<!-- Preset macros -->
+			<div *ngIf="filteredPresets.length > 0">
+				<div class="macro-block mb-3" *ngFor="let macro of generatePresetMacros(); let i = index">
+					<div class="d-flex justify-content-between align-items-center mb-1">
+						<strong>Preset Macro: {{ filteredPresets[i].name }}</strong>
+						<button class="btn btn-sm btn-outline-secondary" (click)="copyMacro(macro)">
+							<i class="bi bi-clipboard"></i>
+						</button>
+					</div>
+					<pre class="macro-code">{{ macro }}</pre>
+				</div>
+			</div>
+			<div class="text-muted small" *ngIf="filteredPresets.length === 0">
+				(No presets available for this dryer)
+			</div>
+		</div>
+	</div>
+
+	<!-- Embed Links Card -->
+	<div class="card embed-links-card p-3 mb-3">
+		<div class="d-flex justify-content-between align-items-center mb-2 clickable" (click)="toggleEmbedLinks()" style="cursor: pointer;">
+			<h3 class="m-0 fs-5 d-flex align-items-center gap-2">
+				<i class="bi bi-display text-success"></i>
+				<span>Klipper Embed Pages</span>
+			</h3>
+			<i class="bi" [ngClass]="embedLinksExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+		</div>
+		<div class="embed-content" *ngIf="embedLinksExpanded">
+			<p class="text-muted small mb-3">
+				Use these URLs as HTTP cameras in Klipper to embed charts and controls in the web interface:
+			</p>
+
+			<!-- Control URL -->
+			<div class="url-block mb-3">
+				<div class="d-flex justify-content-between align-items-center mb-1">
+					<strong><i class="bi bi-sliders me-1"></i>Control Page</strong>
+					<button class="btn btn-sm btn-outline-secondary" (click)="copyUrl(getEmbedUrls().control, 'Control')">
+						<i class="bi bi-clipboard"></i>
+					</button>
+				</div>
+				<div class="url-display mb-2">
+					<code>{{ getEmbedUrls().control }}</code>
+				</div>
+				<div class="preview-frame">
+					<iframe [src]="getEmbedUrls().control | safeUrl" frameborder="0" loading="lazy"></iframe>
+				</div>
+			</div>
+
+			<!-- Chart URL -->
+			<div class="url-block mb-3">
+				<div class="d-flex justify-content-between align-items-center mb-1">
+					<strong><i class="bi bi-graph-up me-1"></i>Chart Page</strong>
+					<button class="btn btn-sm btn-outline-secondary" (click)="copyUrl(getEmbedUrls().chart, 'Chart')">
+						<i class="bi bi-clipboard"></i>
+					</button>
+				</div>
+				<div class="url-display mb-2">
+					<code>{{ getEmbedUrls().chart }}</code>
+				</div>
+				<div class="preview-frame">
+					<iframe [src]="getEmbedUrls().chart | safeUrl" frameborder="0" loading="lazy"></iframe>
+				</div>
+			</div>
+
+			<div class="alert alert-info small mb-0" role="alert">
+				<i class="bi bi-info-circle me-1"></i>
+				Make sure PyUnit API is accessible from your printer network at this address for proper Klipper integration.
+			</div>
+		</div>
+	</div>
+</div>
+<ng-template #invalidId>
+	<div class="alert alert-danger p-2 m-3">Invalid dryer id</div>
+</ng-template>

@@ -1,87 +1,394 @@
 # PyUnit
+
+![Docker Build](https://github.com/xatang/PyUnit/actions/workflows/docker-build.yml/badge.svg)
+![Docker Pulls](https://img.shields.io/docker/pulls/xatang/pyunit)
+![Docker Image Size](https://img.shields.io/docker/image-size/xatang/pyunit/latest)
+![License](https://img.shields.io/github/license/xatang/PyUnit)
+
+
 PyUnit is a custom firmware for [iDryer Unit](https://github.com/pavluchenkor/iDryer-Unit) written in Python.
 
-# Features
 
-+ Separate web panel for drying control
-+ Drying process graphs
-+ Improved temperature control algorithms
-+ Improved humidity control algorithms
-+ Storage mode with humidity maintenance
-+ Storage mode with temperature maintenance
+## ✨ Features
 
-# Description of Modes
+- 🌡️ **Real-time monitoring** of temperature and humidity
+- 🎯 **PID temperature control** with configurable parameters
+- 🔄 **Multiple drying presets** with timer and storage modes
+- 📊 **Interactive charts** with adaptive downsampling
+- 🔌 **Klipper integration** via Moonraker API
+- 🎨 **LED control** for visual status indicators
+- 🚪 **Servo control** for automated door operation
+- 📱 **Responsive web interface** built with Angular
+- 🔗 **WebSocket real-time updates**
+- 📋 **Embed pages** for Klipper HTTP camera integration
+- 🤖 **G-code macro generation** for Klipper
+- 🐳 **Multi-platform Docker images** (amd64, arm64)
 
-## Pending
-Standby mode, the dryer does nothing.
+## 🚀 Quick Start
 
-## Drying
-Drying mode with a target humidity level. In this mode, the dryer maintains the set temperature with a possible overshoot of ``Max temperature delta``. After reaching the target humidity, it transitions to the next mode.
+### One-Command Installation
 
-## Timer Drying
-Drying mode with target humidity maintenance. In this mode, the dryer maintains the target humidity by lowering the drying temperature or opening the vent. If the ``Storage temperature`` parameter is set, the temperature will not drop below it. The mode lasts until the ``Dry time`` expires.
-
-## Humidity Storage
-Humidity maintenance mode. Activated after Timer drying if ``Storage temperature`` is not set. In this mode, the dryer maintains humidity within the specified range. If the humidity exceeds the allowed value, the dryer turns on the heater and dries for the duration of ``Humidity Dry Time``. The cycle then repeats.
-
-## Temperature Storage
-Humidity maintenance mode with temperature control. Activated after Timer drying if ``Storage temperature`` is set. In this mode, the ``Storage temperature`` is maintained, and the target humidity is attempted to be maintained. However, this may not be possible if the Storage temperature is too high.
-
-# Requirements
-
-Python 3.11 or higher. Lower versions of Python may be supported but have not been tested.
-
-# Installation
-
-1. Connect via SSH to your printer.
-2. Navigate to the user's home directory.
-   For example:
-   ```bash
-   cd /home/orangepi
-   ```
-3. Clone the repository:
-   ```bash
-   git clone https://github.com/xatang/PyUnit
-   ```
-4. Use nano or another editor to edit config.json.
-   [Configuration parameters description](https://github.com/xatang/PyUnit/blob/main/CONFIG.md)
-5. Run install.sh:
-   ```bash
-   bash install.sh
-   ```
-6. The service should start. You can access it at ``http://printer_ip:app_port/``
-
-
->Additionally, you can add the following commands to the Fluidd or Mainsail console filters to avoid a flood of messages during firmware operation.
 ```bash
-SET_LED LED=[led_name] INDEX=
-SET_HEATER_TEMPERATURE HEATER=[heater_name]
-SET_SERVO SERVO=[servo_name]
+git clone https://github.com/xatang/PyUnit.git
+cd PyUnit
+chmod +x run.sh
+./run.sh
 ```
 
-# Control via Klipper Gcode Macro
+**That's it!** Access PyUnit at `http://YOUR_IP:5000`
 
-1. To control the drying process via gcode macro, your printer must have the [gcode_shell_command](https://github.com/dw-0/kiauh/blob/master/docs/gcode_shell_command.md) extension installed.
-2. After installation, modify the path to `config.json` in ``./idryer_macros/api.py`` to match your setup.
-3. You can then replace your original ``U1.cfg`` with the contents of ``./idryer_macros/U1.cfg.example``. Be sure to change ``/home/orangepi`` to your actual path.
+The script will automatically:
+- ✅ Install Docker and Docker Compose (if needed)
+- ✅ Detect your IP address
+- ✅ Configure the environment
+- ✅ Download pre-built Docker image
+- ✅ Start the application
 
->The unit ID is essentially the index of ``config.json``, starting from 0.
+**Installation time:** 1-3 minutes (no compilation required!)
 
->The preset number is also the index of the preset in each unit, starting from 0.
+### Requirements
 
-# Additional Web Pages
+- **OS:** Linux (Ubuntu, Debian, Raspbian, Armbian)
+- **Architecture:** amd64 (x86_64) or arm64 (aarch64)
+- **RAM:** 256MB minimum (512MB recommended)
+- **Disk:** ~1GB for Docker image
 
-### http://printer_ip:app_port/webcam_chart
-4:3 page that can be added as an HTTP webcam for viewing graphs.
-### http://printer_ip:app_port/webcam_status
-4:3 page that can be added as an HTTP webcam for viewing statuses.
-### http://printer_ip:app_port/chart
-Page displaying only graphs.
+### Updates
 
-> Adding pages as a webcam does not allow you to control the firmware using buttons, as clicks are inactive in the camera area.
+To update to the latest version:
 
-# Images
+```bash
+cd PyUnit
+./run.sh
+```
 
-![Web Panel](./images/Screenshot_1.png)
+Updates preserve your configuration and IP settings automatically.
 
-![Fluidd Integration](./images/Screenshot_2.png)
+## 🏗️ Architecture
+
+### Backend (FastAPI + Python 3.11)
+- **FastAPI** - Modern async web framework
+- **SQLAlchemy** - ORM with SQLite database
+- **Alembic** - Database migrations
+- **WebSockets** - Real-time bidirectional communication
+- **Uvicorn** - ASGI server (hardcoded: `0.0.0.0:5000`)
+- **Simple-PID** - PID controller for temperature regulation
+- **aiohttp** - Async HTTP client for Moonraker API
+
+**Key Components:**
+- `api/endpoints/` - Modular REST API endpoints
+- `api/cruds/` - Database CRUD operations
+- `api/workers/` - Background status monitoring
+- `api/tools/` - Dryer control & Moonraker integration
+- `main.py` - Application entry point (fixed host/port)
+
+### Frontend (Angular 18)
+- **Angular 18** - Standalone components architecture
+- **Runtime Configuration** - IP/URLs set at container startup
+- **Highcharts** - Interactive data visualization
+- **Bootstrap 5** - Dark theme UI
+- **RxJS** - Reactive state management
+- **WebSocket** - Real-time data subscriptions
+
+**Port Mapping:**
+- Internal: Always `5000` (hardcoded in `main.py`)
+- External: Configurable via `.env` `PORT` variable
+- Example: `PORT=8080` maps `8080:5000` (host:container)
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+The `.env` file is automatically created with your detected IP:
+
+```env
+# Backend Configuration
+LOG_LEVEL=INFO                    # Logging verbosity
+DRYER_LOG_LEVEL=INFO              # Dryer-specific logging
+CLEAR_LOGS_ON_STARTUP=True        # Clear logs on startup
+
+# External Access (auto-configured by run.sh)
+PORT=5000                         # External port (host side)
+API_URL=http://192.168.1.100:5000/api  # Frontend API URL
+WS_URL=ws://192.168.1.100:5000/api     # WebSocket URL
+```
+
+**Note:** `HOST=0.0.0.0` and internal `PORT=5000` are **hardcoded in `main.py`** and not configurable.
+
+### Docker Compose
+
+`docker-compose.yml` uses `.env` automatically:
+
+```yaml
+services:
+  pyunit:
+    image: xatang/pyunit:latest  # Auto-detected by run.sh
+    ports:
+      - "${PORT:-5000}:5000"     # External:Internal
+    environment:
+      - API_URL=${API_URL}       # For runtime config.js
+      - WS_URL=${WS_URL}
+    volumes:
+      - ./pyunit.db:/app/pyunit.db
+      - ./app.log:/app/app.log
+      - ./dryer.log:/app/dryer.log
+```
+
+### Changing the External Port
+
+Edit `.env`:
+```env
+PORT=8080
+API_URL=http://192.168.1.100:8080/api
+WS_URL=ws://192.168.1.100:8080/api
+```
+
+Then restart:
+```bash
+sudo docker compose up -d
+```
+
+## 🎮 Usage
+
+### Dashboard
+
+**Real-time Monitoring:**
+- Live temperature and humidity charts
+- Current dryer status and remaining time
+- Heater and servo state indicators
+- Historical data with time range selector (5m, 10m, 1h, 6h, 12h, All)
+
+**Starting a Drying Cycle:**
+1. Select a dryer from the list
+2. Choose a preset
+3. Click **Start** - the dryer will
+
+### Configuration
+
+**Moonraker Integration:**
+1. Go to **Config** → **Moonraker**
+2. Set Moonraker IP
+3. Add API key (if authentication enabled)
+4. Save configuration
+5. Add new dryer
+6. Assign presets to new dryer
+
+### Klipper Integration
+
+**G-code Macros:**
+1. Go to dryer detail page
+2. Expand **Klipper G-code Macros**
+3. Configure Python script path
+4. Copy macros to `printer.cfg`
+5. Use in Klipper:
+   ```gcode
+   OFF_DRYER ID=1
+   PRESET_DRYER ID=1 PRESET_ID=5
+   ```
+
+**HTTP Camera Embed:**
+1. Expand **Klipper Embed Pages**
+2. Copy embed URLs
+3. Add to Moonraker config:
+   ```ini
+   [camera pyunit_control]
+   location: dryer
+   service: http
+   target_fps: 15
+   stream_url: http://192.168.1.100:5000/embed/dryer/1/control
+   
+   [camera pyunit_chart]
+   location: dryer
+   service: http  
+   target_fps: 15
+   stream_url: http://192.168.1.100:5000/embed/dryer/1/chart
+   ```
+
+## 🛠️ Service Management
+
+```bash
+# View status
+sudo docker compose ps
+
+# Start/stop/restart
+sudo docker compose up -d
+sudo docker compose down
+sudo docker compose restart
+
+# View logs (live)
+sudo docker compose logs -f
+
+# View logs (last 100 lines)
+sudo docker compose logs --tail=100
+
+# Check resource usage
+sudo docker stats pyunit
+```
+
+## 📚 API Documentation
+
+Interactive documentation available at:
+- **Swagger UI:** `http://192.168.1.100:5000/docs`
+- **ReDoc:** `http://192.168.1.100:5000/redoc`
+
+### Key Endpoints
+
+**Dashboard:**
+- `GET /api/dashboard` - Overview of all dryers
+- `GET /api/dashboard/dryer/{id}` - Dryer details with chart data
+- `POST /api/dashboard/dryer/{id}/preset` - Start preset on dryer
+- `POST /api/dashboard/dryer/{id}/reset` - Reset dryer to pending
+
+**Configuration:**
+- `GET /api/config/dryers` - List all dryers
+- `GET /api/config/moonraker` - Moonraker settings
+- `PUT /api/config/moonraker` - Update Moonraker config
+
+**Presets:**
+- `GET /api/presets` - List all presets
+- `POST /api/presets` - Create new preset
+- `PUT /api/presets/{id}` - Update preset
+- `DELETE /api/presets/{id}` - Delete preset
+
+**Logs:**
+- `GET /api/logs` - Retrieve application logs
+
+**WebSocket:**
+- `WS /api/ws` - Real-time status updates
+
+## 📁 Project Structure
+
+```
+PyUnit/
+├── .github/
+│   └── workflows/
+│       └── docker-build.yml     # CI/CD pipeline for multi-platform builds
+├── .venv/                       # Python virtual environment (local dev)
+├── __pycache__/                 # Python bytecode cache
+├── alembic/                     # Database migrations
+│   ├── versions/                # Migration scripts
+│   │   └── 5a91b07ca6c5_initdb.py
+│   ├── env.py                   # Alembic environment
+│   ├── README                   # Alembic documentation
+│   └── script.py.mako           # Migration template
+├── api/                         # Backend API
+│   ├── cruds/                   # Database CRUD operations
+│   │   ├── common_crud.py       # Common operations (logs cleanup)
+│   │   ├── dryer_crud.py        # Dryer management
+│   │   ├── moonraker_config_crud.py  # Moonraker config
+│   │   └── preset_crud.py       # Preset management
+│   ├── endpoints/               # API route handlers
+│   │   ├── __init__.py          # Router aggregation
+│   │   ├── common.py            # Health check, WebSocket
+│   │   ├── config_page.py       # Dryer & Moonraker config
+│   │   ├── dashboard_page.py    # Dashboard & dryer control
+│   │   ├── logs_page.py         # Logs retrieval
+│   │   └── presets_page.py      # Preset CRUD
+│   ├── schemas/                 # Pydantic validation models
+│   │   ├── dryer_schema.py
+│   │   ├── dryer_config_schema.py
+│   │   ├── heater_config_schema.py
+│   │   ├── humidity_config_schema.py
+│   │   ├── led_config_schema.py
+│   │   ├── moonraker_config_schema.py
+│   │   ├── preset_schema.py
+│   │   ├── servo_config_schema.py
+│   │   └── temperature_config_schema.py
+│   ├── tools/                   # Core control logic
+│   │   ├── dryer_control.py     # Dryer state machine & PID control
+│   │   └── moonraker_api.py     # Moonraker HTTP client
+│   ├── workers/                 # Background tasks
+│   │   └── status_worker.py     # Periodic status polling & control
+│   ├── database.py              # SQLAlchemy setup & migrations
+│   ├── logger.py                # Logging configuration
+│   ├── models.py                # SQLAlchemy ORM models
+│   └── websocket_manager.py     # WebSocket connection manager
+├── config_and_macros/
+│   └── idryer_api.py            # Python script for Klipper G-code integration
+├── web/                         # Frontend (Angular 18)
+│   ├── public/                  # Static assets
+│   │   └── assets/
+│   │       └── imgs/            # Images
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── common-ui/       # Shared UI components
+│   │   │   ├── pages/
+│   │   │   │   ├── configs/     # Configuration pages
+│   │   │   │   │   ├── dryer-config/
+│   │   │   │   │   └── moonraker-config/
+│   │   │   │   ├── dashboard/   # Dashboard & dryer details
+│   │   │   │   │   ├── dashboard/
+│   │   │   │   │   └── dryer-detail/
+│   │   │   │   ├── embed/       # Klipper embed pages
+│   │   │   │   │   ├── dryer-chart/
+│   │   │   │   │   └── dryer-control/
+│   │   │   │   ├── logs/        # Logs viewer
+│   │   │   │   └── presets/     # Preset CRUD
+│   │   │   │       ├── preset-editor/
+│   │   │   │       └── presets-list/
+│   │   │   ├── services/        # Angular services
+│   │   │   │   ├── dryer-config.service.ts
+│   │   │   │   ├── moonraker-config.service.ts
+│   │   │   │   ├── presets.service.ts
+│   │   │   │   └── websocket.service.ts
+│   │   │   ├── app.config.ts    # Angular app configuration
+│   │   │   ├── app.html         # Root component template
+│   │   │   ├── app.initializer.ts  # Runtime config loader
+│   │   │   ├── app.routes.ts    # Route definitions
+│   │   │   ├── app.scss         # Global styles
+│   │   │   └── app.ts           # Root component
+│   │   ├── environments.ts      # Runtime config (auto-generated by update-env.js)
+│   │   ├── index.html           # HTML entry point
+│   │   ├── main.ts              # Bootstrap with APP_INITIALIZER
+│   │   └── styles.scss          # Global SCSS styles
+│   ├── angular.json             # Angular CLI configuration
+│   ├── package.json             # NPM dependencies
+│   ├── tsconfig.json            # TypeScript configuration
+│   ├── tsconfig.app.json        # App-specific TS config
+│   ├── tsconfig.spec.json       # Test TS config
+│   └── update-env.js            # Pre-build script (generates environments.ts)
+├── .dockerignore                # Docker build exclusions
+├── .env                         # Environment config (auto-created by run.sh)
+├── .gitignore                   # Git ignore patterns
+├── alembic.ini                  # Alembic configuration
+├── build.sh                     # Local Docker image build script
+├── docker-compose.yml           # Docker Compose service definition
+├── Dockerfile                   # Multi-stage Docker build (Node + Python)
+├── entrypoint.sh                # Container startup script (creates config.js)
+├── main.py                      # FastAPI application entry point
+├── pyunit.db                    # SQLite database (created by run.sh)
+├── requirements.txt             # Python dependencies
+├── run.sh                       # Installation/update script
+└── README.md                    # This file
+```
+
+
+## 🔬 Technologies
+
+### Backend Stack
+- **FastAPI** 0.104+ - Modern async web framework
+- **Python** 3.11 - Programming language
+- **SQLAlchemy** 2.0+ - SQL toolkit and ORM
+- **Alembic** 1.12+ - Database migration tool
+- **Pydantic** 2.0+ - Data validation using Python type hints
+- **simple-pid** 2.0+ - PID controller implementation
+- **aiohttp** 3.9+ - Async HTTP client for Moonraker
+- **uvicorn** 0.24+ - ASGI server implementation
+- **WebSockets** - Real-time bidirectional communication
+
+### Frontend Stack
+- **Angular** 18 - Modern web application framework
+- **TypeScript** 5.0+ - Typed JavaScript superset
+- **Highcharts** 11+ - Interactive charting library
+- **Bootstrap** 5.3 - Responsive UI framework
+- **Bootstrap Icons** 1.11+ - Icon library
+- **RxJS** 7.8+ - Reactive programming library
+- **Standalone Components** - Modern Angular architecture
+
+### DevOps & Tools
+- **Docker** - Containerization
+- **Docker Compose** - Multi-container orchestration
+- **GitHub Actions** - CI/CD automation
+- **Docker Buildx** - Multi-platform image builds
+- **SQLite** - Embedded database
+

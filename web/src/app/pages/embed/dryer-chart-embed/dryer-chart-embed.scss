@@ -1,0 +1,141 @@
+/**
+ * Embedded chart view styles - Fully responsive for Klipper HTTP camera
+ * Adapts to any screen resolution
+ */
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.embed-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: clamp(8px, 1.5vw, 16px);
+  background: linear-gradient(135deg, #1a1d23 0%, #2a2d33 100%);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.embed-header {
+  flex-shrink: 0;
+  margin-bottom: clamp(6px, 1vw, 10px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: clamp(8px, 1.5vw, 12px);
+  flex-wrap: wrap;
+}
+
+.embed-title {
+  font-size: clamp(14px, 2vw, 18px);
+  font-weight: 600;
+  color: #f0f0f2;
+  margin: 0;
+  display: flex;
+  align-items: center;
+
+  i {
+    color: #0d6efd;
+    font-size: clamp(16px, 2.2vw, 20px);
+  }
+}
+
+.time-range-selector {
+  flex-shrink: 0;
+
+  .btn {
+    font-size: clamp(10px, 1.4vw, 13px);
+    padding: clamp(3px, 0.6vw, 5px) clamp(8px, 1.2vw, 12px);
+
+    &.active {
+      background-color: var(--bs-secondary);
+      border-color: var(--bs-secondary);
+    }
+  }
+}
+
+.embed-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-wrapper {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: clamp(6px, 1vw, 10px);
+  padding: clamp(6px, 1vw, 12px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  // Ensure chart container has proper dimensions
+  #embedChart {
+    width: 100%;
+    min-height: 300px;
+    height: 100%;
+  }
+}
+
+// Responsive font sizes for small screens
+@media (max-width: 640px) {
+  .embed-title {
+    font-size: 12px;
+    i {
+      font-size: 14px;
+    }
+  }
+}
+
+@media (max-height: 480px) {
+  .embed-header {
+    margin-bottom: 4px;
+  }
+
+  .embed-container {
+    padding: 6px;
+  }
+
+  .chart-wrapper {
+    padding: 4px;
+  }
+}
+
+// Very small resolutions like 634x475
+@media (max-width: 650px) and (max-height: 500px) {
+  .embed-container {
+    padding: 4px;
+  }
+
+  .embed-header {
+    margin-bottom: 3px;
+    gap: 6px;
+  }
+
+  .embed-title {
+    font-size: 12px;
+    i {
+      font-size: 14px;
+    }
+  }
+
+  .time-range-selector .btn {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .chart-wrapper {
+    padding: 3px;
+  }
+}
