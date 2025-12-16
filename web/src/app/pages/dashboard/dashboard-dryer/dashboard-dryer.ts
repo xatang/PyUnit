@@ -382,7 +382,22 @@ export class DashboardDryer implements OnInit, OnDestroy {
   /** Copy specific macro text to clipboard */
   async copyMacro(macroText: string): Promise<void> {
     try {
-      await navigator.clipboard.writeText(macroText);
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(macroText);
+      } else {
+        // Fallback for older browsers or when clipboard API is not available
+        const textArea = document.createElement('textarea');
+        textArea.value = macroText;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
       this.toast.show('Macro copied to clipboard', { classname: 'bg-success text-light', delay: 2000 });
       this.logger.info('DashboardDryer', 'Copied single macro to clipboard', { dryer: this.dryerId });
     } catch (e) {
@@ -399,7 +414,22 @@ export class DashboardDryer implements OnInit, OnDestroy {
     macros.push(...this.generatePresetMacros());
     const text = macros.join('\n\n');
     try {
-      await navigator.clipboard.writeText(text);
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback for older browsers or when clipboard API is not available
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
       this.toast.show('G-code macros copied to clipboard', { classname: 'bg-success text-light', delay: 2000 });
       this.logger.info('DashboardDryer', 'Copied macros to clipboard', { dryer: this.dryerId, lines: macros.length });
     } catch (e) {
