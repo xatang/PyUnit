@@ -1,0 +1,91 @@
+{
+  "hash": "f540dfe2",
+  "configHash": "b6a46faa",
+  "lockfileHash": "012153e9",
+  "browserHash": "91aaed0b",
+  "optimized": {
+    "@angular/common": {
+      "src": "../../../../../../node_modules/@angular/common/fesm2022/common.mjs",
+      "file": "@angular_common.js",
+      "fileHash": "1799e8c4",
+      "needsInterop": false
+    },
+    "@angular/common/http": {
+      "src": "../../../../../../node_modules/@angular/common/fesm2022/http.mjs",
+      "file": "@angular_common_http.js",
+      "fileHash": "1f1cae97",
+      "needsInterop": false
+    },
+    "@angular/core": {
+      "src": "../../../../../../node_modules/@angular/core/fesm2022/core.mjs",
+      "file": "@angular_core.js",
+      "fileHash": "c9bb6e58",
+      "needsInterop": false
+    },
+    "@angular/forms": {
+      "src": "../../../../../../node_modules/@angular/forms/fesm2022/forms.mjs",
+      "file": "@angular_forms.js",
+      "fileHash": "55353cbd",
+      "needsInterop": false
+    },
+    "@angular/platform-browser": {
+      "src": "../../../../../../node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
+      "file": "@angular_platform-browser.js",
+      "fileHash": "03145c3b",
+      "needsInterop": false
+    },
+    "@angular/router": {
+      "src": "../../../../../../node_modules/@angular/router/fesm2022/router.mjs",
+      "file": "@angular_router.js",
+      "fileHash": "d3477f02",
+      "needsInterop": false
+    },
+    "rxjs": {
+      "src": "../../../../../../node_modules/rxjs/dist/esm5/index.js",
+      "file": "rxjs.js",
+      "fileHash": "fd44dd30",
+      "needsInterop": false
+    },
+    "zone.js": {
+      "src": "../../../../../../node_modules/zone.js/fesm2015/zone.js",
+      "file": "zone__js.js",
+      "fileHash": "fccad403",
+      "needsInterop": true
+    },
+    "highcharts": {
+      "src": "../../../../../../node_modules/highcharts/highcharts.js",
+      "file": "highcharts.js",
+      "fileHash": "44237826",
+      "needsInterop": true
+    },
+    "highcharts/modules/boost": {
+      "src": "../../../../../../node_modules/highcharts/modules/boost.js",
+      "file": "highcharts_modules_boost.js",
+      "fileHash": "a46d71d1",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-523CY77X": {
+      "file": "chunk-523CY77X.js"
+    },
+    "chunk-NYH6O5MW": {
+      "file": "chunk-NYH6O5MW.js"
+    },
+    "chunk-VRFZOILF": {
+      "file": "chunk-VRFZOILF.js"
+    },
+    "chunk-WMCYXEPE": {
+      "file": "chunk-WMCYXEPE.js"
+    },
+    "chunk-G25W22AS": {
+      "file": "chunk-G25W22AS.js"
+    },
+    "chunk-RRJ5VVQO": {
+      "file": "chunk-RRJ5VVQO.js"
+    },
+    "chunk-KQSGOR2U": {
+      "file": "chunk-KQSGOR2U.js"
+    }
+  }
+}
