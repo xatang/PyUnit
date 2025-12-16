@@ -1,4 +1,3 @@
-# PyUnit 2.0 Dockerfile
 FROM python:3.11-slim
 
 # Set environment variables
@@ -54,8 +53,9 @@ RUN echo "API_URL=http://localhost:5000/api" > /app/.env && \
     echo "HOST=0.0.0.0" >> /app/.env && \
     echo "PORT=5000" >> /app/.env
 
-# Build frontend
-RUN npm run build -- --configuration production
+# Ensure local ng is executable and run the build via the local binary
+RUN if [ -f ./node_modules/.bin/ng ]; then chmod +x ./node_modules/.bin/ng || true; fi && \
+    ./node_modules/.bin/ng build --configuration production
 
 # Remove temporary .env (will be mounted from host during runtime)
 RUN rm /app/.env
