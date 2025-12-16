@@ -165,7 +165,7 @@ export class DryerControlEmbed implements OnInit, OnDestroy {
   }
 
   async onStop() {
-    if (!this.summary || this.summary.status !== 'drying') return;
+    if (!this.summary || this.summary.status === 'pending') return;
     try {
       const res = await this.dashboard.stopDryer(this.dryerId);
       this.toast.show(`Stopped dryer #${this.dryerId}${res?.message ? ': ' + res.message : ''}`, {

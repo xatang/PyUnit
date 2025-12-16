@@ -341,7 +341,7 @@ export class DashboardDryer implements OnInit, OnDestroy {
   }
 
   async onStop() {
-    if (!this.summary || this.summary.status !== 'drying') return;
+    if (!this.summary || this.summary.status === 'pending') return;
     try {
       const res = await this.dashboard.stopDryer(this.dryerId);
       this.toast.show(`Stopped dryer #${this.dryerId}${res?.message ? ': '+res.message : ''}`, { classname: 'bg-warning text-dark', delay: 3000, dedupKey: 'stop-'+this.dryerId });

@@ -31,7 +31,7 @@
 						<span *ngIf="!starting">Start</span>
 						<span *ngIf="starting" class="spinner-border spinner-border-sm"></span>
 					</button>
-					<button class="btn btn-danger btn-sm" [disabled]="!summary || summary.status!=='drying'" (click)="onStop()">Stop</button>
+					<button class="btn btn-danger btn-sm" [disabled]="!summary || summary.status==='pending'" (click)="onStop()">Stop</button>
 			</div>
 		</div>
 			<ng-template #loadingSummary>

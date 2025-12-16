@@ -76,7 +76,7 @@
 			</button>
 			<button
 				class="btn btn-danger btn-control"
-				[disabled]="!summary || summary.status !== 'drying'"
+				[disabled]="!summary || summary.status === 'pending'"
 				(click)="onStop()">
 				<i class="bi bi-stop-fill me-1"></i>Stop
 			</button>
