@@ -54,7 +54,7 @@ export class DashboardDryer implements OnInit, OnDestroy {
   private initiatedConnection = false;
   // G-code macros card
   macrosExpanded = false;
-  pythonScriptPath = '/home/orangepi/PyUnit/venv/bin/python3 /home/orangepi/PyUnit/config_and_macros/idryer_api.py';
+  pythonScriptPath = 'python3 /home/orangepi/PyUnit/config_and_macros/idryer_api.py';
   // Embed links card
   embedLinksExpanded = false;
 
