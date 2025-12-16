@@ -24,7 +24,25 @@ PyUnit is a custom firmware for [iDryer Unit](https://github.com/pavluchenkor/iD
 - 🤖 **G-code macro generation** for Klipper
 - 🐳 **Multi-platform Docker images** (amd64, arm64)
 
-## 🚀 Quick Start
+## � Screenshots
+
+### Dashboard Overview
+![Dashboard](images/dashboard.png)
+*Main dashboard with all dryers overview and real-time monitoring*
+
+### Dryer Dashboard
+![Dryer Dashboard](images/dryer_dashboard.png)
+*Detailed dryer view with temperature/humidity charts and control panel*
+
+### Presets Management
+![Presets](images/presets.png)
+*Preset configuration with timer and storage modes*
+
+### Fluidd Integration
+![Fluidd Integration](images/fluidd-integration.png)
+*PyUnit embedded control panel in Fluidd/Mainsail interface*
+
+## � Quick Start
 
 ### One-Command Installation
 
