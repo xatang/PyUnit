@@ -1,119 +1,75 @@
-import signal
-import sys
-from misc.logs import logger
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+import uvicorn
+from contextlib import asynccontextmanager
+from api.database import run_migrations, seed_db
+from api.logger import logger, get_logger
+from fastapi.responses import FileResponse
+import os
+from api.endpoints import router as api_router
+from api.workers.status_worker import statusWorker
+from api.tools.dryer_control import Dryer_control
+from api.cruds.common_crud import common_crud
+from api.database import get_db
 
-import aiohttp_jinja2
-import jinja2
-from aiohttp import web
-from aiohttp.abc import AbstractAccessLogger
+def _to_bool(v: str | None) -> bool:
+    if v is None:
+        return False
+    return v.strip().lower() in {"1", "true", "yes", "on"}
 
-import misc.jinja_formatters as jinja_formatters
-from misc.routes import setup_routes
-import json
-from idryer.workers import moonraker_data_updater
-import asyncio
+CLEAR_LOGS_ON_STARTUP = _to_bool(os.getenv("CLEAR_LOGS_ON_STARTUP"))
 
+api_logger = get_logger("api")
 
-class AccessLogger(AbstractAccessLogger):
-    def log(self, request, response, time):
-        try:
-            real_ip = request.headers["CF-CONNECTING-IP"]
-        except:
-            real_ip = request.remote
-        try:
-            user_agent = request.headers["User-Agent"]
-        except:
-            user_agent = ""
+dryer_instances: list[Dryer_control] = []
 
-        self.logger.info(
-            f"{real_ip}"
-            f' "{request.method} {request.raw_path} "'
-            f' done in {time}s: {response.status} "-" "{user_agent}"'
-        )
-
-
-def init_app():
-    app = web.Application()
-    app.config = json.load(open('./config.json'))
-    app.config['update_rate'] = 1
-    app.idryers = []
-    logger
-    aiohttp_jinja2.setup(
-        app,
-        loader=jinja2.FileSystemLoader("templates"),
-        context_processors=[aiohttp_jinja2.request_processor],
-    )
-    setup_routes(app)
-    env = aiohttp_jinja2.get_env(app)
-    env.globals.update(zip=zip)
-    env.filters["format_datetime"] = jinja_formatters.format_datetime
-    env.policies['json.dumps_kwargs']['ensure_ascii'] = False
-    return app
-
-
-app = init_app()
-
-
-async def start_background_tasks(app):
-    app['moonraker_data_updater'] = asyncio.create_task(
-        moonraker_data_updater(app))
-
-
-async def cleanup_background_tasks(app):
-    app['moonraker_data_updater'].cancel()
-    await app['moonraker_data_updater']
-
-
-async def shutdown(signal=None, loop=None):
-    """Cleanup tasks tied to the service's shutdown."""
-    if signal:
-        logger.info(f"Received exit signal {signal.name}...")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    run_migrations()
+    if CLEAR_LOGS_ON_STARTUP:
+        async for session in get_db():
+            try:
+                deleted = await common_crud.clear_logs(session)
+                logger.info("Startup log clear executed deleted=%s", deleted)
+            except Exception:
+                logger.exception("Failed to clear logs on startup")
     else:
-        logger.info("Shutting down...")
+        logger.info("Skipping startup log clear (CLEAR_LOGS_ON_STARTUP=%s)", CLEAR_LOGS_ON_STARTUP)
+    # Seed baseline data (presets, moonraker config) if empty
+    await seed_db()
+    await statusWorker.start(app)
+    logger.info("Application started with migrations")
+    yield
+    await statusWorker.stop()
+    logger.info("Application shutting down")
 
-    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-    [task.cancel() for task in tasks]
+app = FastAPI(
+    title="PyUnit",
+    description="Api for PyUnit",
+    version="2.0.0",
+    debug=True,
+    lifespan=lifespan
+)
 
-    logger.info(f"Cancelling {len(tasks)} outstanding tasks")
-    await asyncio.gather(*tasks, return_exceptions=True)
-    if loop:
-        loop.stop()
+app.state.dryer_instances = dryer_instances
+app.include_router(api_router)
 
+@app.get("/help", response_class=HTMLResponse)
+async def help_page():
+    return """
+    <h1>Hello World</h1>
+    <p>
+        <a href="/docs">Swagger UI documentation</a><br>
+        <a href="/redoc">ReDoc documentation</a>
+    </p>
+    """
 
-def handle_exception(loop, context):
-    msg = context.get("exception", context["message"])
-    logger.error(f"Caught exception: {msg}")
-    logger.info("Shutting down...")
-    asyncio.create_task(shutdown(loop=loop))
+@app.get("/{full_path:path}")
+async def web_gui(full_path: str):
+    file_path = os.path.join("web", "dist", "pyunit", "browser", full_path)
+    if os.path.isfile(file_path):
+        return FileResponse(file_path)
+    return FileResponse(os.path.join("web", "dist", "pyunit", "browser", "index.html"))
 
-
-app.on_startup.append(start_background_tasks)
-app.on_cleanup.append(cleanup_background_tasks)
-
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    if sys.platform != 'win32':
-        signals = [signal.SIGTERM, signal.SIGINT]
-        if hasattr(signal, 'SIGHUP'):
-            signals.append(signal.SIGHUP)
-
-        for s in signals:
-            loop.add_signal_handler(
-                s, lambda s=s: asyncio.create_task(shutdown(s, loop)))
-    else:
-        async def windows_shutdown():
-            await shutdown(loop=loop)
-
-        def signal_handler():
-            asyncio.create_task(windows_shutdown())
-
-        signal.signal(signal.SIGINT, signal_handler)
-
-    loop.set_exception_handler(handle_exception)
-
-    try:
-        web.run_app(app, access_log_class=AccessLogger,
-                    host=app.config['app_ip'], port=app.config['app_port'])
-    finally:
-        loop.close()
-        logger.info("Successfully shutdown the service.")
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=5000, log_config=None)

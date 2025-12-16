@@ -1,0 +1,111 @@
+<!-- logs.html -->
+<div [class.logs-page-visible]="!isLoading" [class.logs-page-hidden]="isLoading" [formGroup]="logForm">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-journal-text"></i> Log Viewer</h5>
+        </div>
+
+        <div class="card-body p-0">
+          <!-- Вкладки -->
+          <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" [class.active]="activeTab === 'dryer'" (click)="switchTab('dryer')">
+                Dryer Logs
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" [class.active]="activeTab === 'app'" (click)="switchTab('app')">
+                App Logs
+              </button>
+            </li>
+          </ul>
+
+          <!-- Панель управления с поиском и кнопками -->
+          <div class="p-3 border-bottom d-flex align-items-center">
+            <!-- Поиск -->
+            <div class="input-group me-3" style="flex: 1;">
+              <span class="input-group-text">
+                <i class="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search logs..."
+                formControlName="searchTerm"
+              >
+            </div>
+
+            <!-- Кнопка Auto-Scroll -->
+            <button
+              class="btn me-2"
+              [class.btn-outline-primary]="!autoScroll"
+              [class.btn-primary]="autoScroll"
+              (click)="toggleAutoScroll()"
+              title="Auto Scroll"
+            >
+              <i class="bi" [class.bi-arrow-down-circle]="!autoScroll" [class.bi-arrow-down-circle-fill]="autoScroll"></i>
+            </button>
+
+            <!-- Кнопка принудительной прокрутки вниз -->
+            <button
+              class="btn btn-outline-secondary me-2"
+              (click)="scrollToBottom()"
+              title="Scroll to Bottom"
+            >
+              <i class="bi bi-arrow-bar-down"></i>
+            </button>
+
+            <!-- Кнопка очистки логов -->
+            <button class="btn btn-danger" (click)="clearLogs()" title="Clear Logs">
+              <i class="bi bi-trash"></i> Clear
+            </button>
+          </div>
+
+          <!-- Контейнер логов -->
+          <div
+            #logContainer
+            class="log-container p-3 bg-light"
+          >
+            <!-- Индикатор загрузки -->
+            <div *ngIf="isLoading" class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Connecting to logs...</p>
+            </div>
+
+            <!-- Логи -->
+            <div *ngIf="!isLoading">
+              <div *ngFor="let log of filteredLogs; let i = index" class="log-entry">
+                <span class="log-time me-2 text-muted">{{ i + 1 }}.</span>
+                <span [innerHTML]="highlightSearch(log)"></span>
+              </div>
+
+              <div *ngIf="filteredLogs.length === 0" class="text-center text-muted py-5">
+                <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                No logs available
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer text-muted d-flex justify-content-between align-items-center">
+          <small>
+            Showing {{ filteredLogs.length }} of
+            {{ activeTab === 'app' ? appLogs.length : dryerLogs.length }} entries
+            <span *ngIf="logForm.get('searchTerm')?.value">(filtered)</span>
+          </small>
+          <small class="d-flex align-items-center">
+            <span class="me-2">Last updated: {{ now | date:'medium' }}</span>
+            <span class="badge" [class.bg-success]="autoScroll" [class.bg-secondary]="!autoScroll">
+              <i class="bi" [class.bi-arrow-down-circle]="autoScroll" [class.bi-pause-circle]="!autoScroll"></i>
+              Auto-Scroll {{ autoScroll ? 'ON' : 'OFF' }}
+            </span>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

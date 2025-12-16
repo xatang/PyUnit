@@ -1,0 +1,168 @@
+.log-container {
+  transition: all 0.4s ease-in-out 0.1s;
+}
+
+.log-container {
+  height: 60vh;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  background-color: #282b30 !important;
+  border-radius: 0 0 0.375rem 0.375rem;
+}
+
+.log-entry {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: #424549;
+  }
+}
+
+.log-time {
+  font-size: 0.8rem;
+  color: #6c757d;
+  min-width: 40px;
+  display: inline-block;
+  text-align: right;
+}
+
+.log-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.log-container::-webkit-scrollbar-track {
+  background: #f1f1f16b;
+  border-radius: 5px;
+}
+
+.log-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 5px;
+}
+
+.log-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.nav-tabs {
+  .nav-link {
+    display: flex;
+    align-items: center;
+    border: none;
+    border-bottom: 3px solid transparent;
+
+    &.active {
+      font-weight: bold;
+      background-color: transparent;
+      border-color: #0d6efd;
+    }
+
+    &:not(.active) {
+      color: #6c757d;
+
+      &:hover {
+        border-color: #dee2e6;
+        color: #495057;
+      }
+    }
+  }
+
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.25em 0.4em;
+    margin-left: 0.5rem;
+  }
+}
+
+.card-footer .badge {
+  i.bi {
+    margin-right: 0.25rem;
+  }
+}
+
+.logs-page-container {
+  transition: all 0.4s ease-in-out 0.1s;
+}
+
+.logs-page-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.logs-page-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  pointer-events: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tabActive {
+  from {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes spinner-border {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-control {
+  transition: all 0.2s ease-in-out;
+
+  &:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+}
+
+.btn {
+  transition: all 0.2s ease-in-out;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}

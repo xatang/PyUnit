@@ -1,0 +1,136 @@
+.dryer-detail-page {
+	--card-bg:#212529; --card-border:#2c3237; color:#dedce0;
+}
+.dryer-detail-page { padding-top:0; margin-top:0; }
+/* Normalize vertical rhythm: exactly 15px above and below the back button block */
+.dryer-detail-page > .page-header { position:relative; margin:15px 0 15px 0; padding:0; }
+/* If some parent adds extra padding we still keep internal zero */
+.dryer-detail-page > .page-header:first-child { margin-top:15px; }
+/* Override Bootstrap mb-3 (which is ~1rem ~16px) to our 15px target */
+.dryer-detail-page > .page-header.mb-3 { margin-bottom:15px !important; }
+/* Remove unexpected extra margins from following grid */
+.dryer-detail-page > .top-cards { margin-top:0; }
+/* Ensure no accidental gap from previous flex version */
+.dryer-detail-page { display:block; }
+@media (max-width:1000px) {
+  .dryer-detail-page > .page-header { margin:15px 0 15px 0; }
+}
+.dryer-detail-page .card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:10px; }
+.top-cards { display:grid; grid-template-columns: 300px 1fr; align-items:stretch; gap:1rem; }
+@media (max-width: 1000px) { .top-cards { grid-template-columns: 1fr; } }
+@media (min-width:1400px){ .top-cards { grid-template-columns: 300px 1fr; } }
+.dryer-status-inline { font-size:.6rem; letter-spacing:.5px; padding:.25rem .45rem; border-radius:4px; text-transform:uppercase; font-weight:600; line-height:1; }
+.status-active { background:#123b2d; color:#42d081; }
+.status-pending { background:#343a40; color:#b9bcc0; }
+.dryer-name { font-size:1.05rem; font-weight:600; }
+.temp-value { color:#ffb66b; }
+.humidity-value { color:#56acee; }
+.presets-buttons { display:flex; flex-wrap:wrap; gap:.5rem; }
+.preset-btn { background:#262d33; border:1px solid #2f353a; color:#cfd2d4; padding:.6rem .95rem; border-radius:8px; line-height:1.15; font-size:.9rem; letter-spacing:.3px; font-weight:600; transition:background .15s,border-color .15s,color .15s, box-shadow .15s; min-width:120px; text-align:center; }
+.preset-btn:nth-child(10n){ animation-delay:.02s; }
+.preset-btn:hover { background:#2c343a; color:#fff; }
+.preset-btn.selected { background:#0d6efd3d; color:#fff; border-color:#0d6efd80; box-shadow:0 0 0 1px #0d6efd66 inset; font-weight:700; }
+.preset-btn:active { transform:translateY(1px); }
+.status-card .dryer-data .data-value { font-weight:600; font-size:1rem; }
+.chart-placeholder { background:#1b2024; border:1px dashed #2c3237; border-radius:8px; }
+.chart-card { min-height:300px; }
+.chart-card #singleDryerChart { min-height:550px; }
+
+/* Equal height cards: make inner cards flex columns */
+.status-card, .presets-card { display:flex; flex-direction:column; }
+.presets-card .presets-buttons { margin-top:.25rem; }
+.presets-card { overflow:auto; }
+
+/* G-code macros card */
+.macros-card {
+	.clickable { user-select: none; }
+	.macro-block {
+		background:#1a1e22;
+		border:1px solid #2c3237;
+		border-radius:6px;
+		padding:.75rem;
+	}
+	.macro-label {
+		font-size:.85rem;
+		color:#9ea1a5;
+		font-weight:600;
+	}
+	.macro-code {
+		background:#0d1117;
+		border:1px solid #21262d;
+		border-radius:4px;
+		padding:.5rem .75rem;
+		margin:0;
+		font-family:'Courier New', monospace;
+		font-size:.8rem;
+		color:#c9d1d9;
+		white-space:pre-wrap;
+		word-break:break-word;
+		line-height:1.4;
+		&:not(:last-child) { margin-bottom:.5rem; }
+	}
+	code {
+		background:#21262d;
+		color:#79c0ff;
+		padding:.15rem .35rem;
+		border-radius:3px;
+		font-size:.85em;
+	}
+}
+
+/* Embed links card */
+.embed-links-card {
+	.clickable { user-select: none; }
+	.url-block {
+		background:#1a1e22;
+		border:1px solid #2c3237;
+		border-radius:6px;
+		padding:.75rem;
+	}
+	.url-display {
+		background:#0d1117;
+		border:1px solid #21262d;
+		border-radius:4px;
+		padding:.6rem .75rem;
+
+		code {
+			background:transparent;
+			color:#79c0ff;
+			font-size:.85rem;
+			font-family:'Courier New', monospace;
+			word-break:break-all;
+			display:block;
+		}
+	}
+
+	.preview-frame {
+		position:relative;
+		width:100%;
+		padding-bottom:75%; // 4:3 aspect ratio
+		background:#0d1117;
+		border:1px solid #21262d;
+		border-radius:4px;
+		overflow:hidden;
+
+		iframe {
+			position:absolute;
+			top:0;
+			left:0;
+			width:100%;
+			height:100%;
+			border:none;
+		}
+	}
+
+	.alert {
+		background:#1a2332;
+		border-color:#264f78;
+		color:#9cdcfe;
+
+		.bi {
+			color:#3794ff;
+		}
+	}
+}
+
+

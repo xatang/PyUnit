@@ -1,0 +1,89 @@
+// Sass modules first
+@use 'sass:color';
+// Import Bootstrap with custom color overrides (avoids variable collision while preserving theming)
+@use 'bootstrap/scss/bootstrap' as * with (
+  $primary: #1a4280,
+  $secondary: #343a40,
+  $success: #0c4128,
+  $danger: #8a232c,
+  $warning: #b39400,
+  $info: #097f99,
+  $light: #adb5bd,
+  $dark: #0a0c0d
+);
+
+:root {
+  --bs-primary: #{$primary};
+  --bs-secondary: #{$secondary};
+  --bs-success: #{$success};
+  --bs-danger: #{$danger};
+  --bs-warning: #{$warning};
+  --bs-info: #{$info};
+  --bs-light: #{$light};
+  --bs-dark: #{$dark};
+
+}
+
+// Update theme color map
+$theme-colors: (
+  "primary": $primary,
+  "secondary": $secondary,
+  "success": $success,
+  "danger": $danger,
+  "warning": $warning,
+  "info": $info,
+  "light": $light,
+  "dark": $dark
+);
+
+// (Bootstrap already loaded with overrides above)
+
+/*
+  Note: The browser developer tools reported a missing source map for bootstrap.min.js (loaded via angular.json scripts).
+  To silence ENOENT sourcemap warnings without altering node_modules, you can either:
+  1) Remove the script include for minified bootstrap.js and use the non-minified version (with existing map), or
+  2) Provide a dummy sourceMappingURL comment here for awareness (we choose documentation only).
+  This comment is informational; build will continue without the map.
+*/
+
+// Additional custom styles
+html, body { height:100%; }
+body {
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  margin: 0;
+  padding: 0;
+}
+app-root { flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+
+// Reset for embed pages (no margins, no scrollbars)
+body:has(app-dryer-chart-embed, app-dryer-control-embed) {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+html:has(app-dryer-chart-embed, app-dryer-control-embed) {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+// lighten($warning, 40%) -> color.adjust with lightness +40%
+.custom-alert {
+  border-left: 4px solid var(--bs-warning);
+  background-color: color.adjust($warning, $lightness: 40%);
+}
+
+.btn-custom {
+  background: linear-gradient(45deg, $primary, $info);
+  border: none;
+  // darken($color, 10%) -> color.adjust with -10% lightness (preserves hue/sat better than scale for small change)
+  &:hover {
+    background: linear-gradient(45deg,
+      color.adjust($primary, $lightness: -10%),
+      color.adjust($info, $lightness: -10%)
+    );
+  }
+}

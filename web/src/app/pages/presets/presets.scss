@@ -1,0 +1,191 @@
+.config-card {
+  margin: 0 auto;
+}
+
+.required-field::after {
+  content: " *";
+  color: #dc3545;
+}
+
+.form-text {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.btn {
+  i {
+    margin-right: 0.5rem;
+  }
+}
+
+.dryer-buttons-container {
+  .dryer-btn {
+    position: relative;
+    transition: all 0.2s ease-in-out;
+
+    &:hover:not(.btn-primary) {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    &.btn-primary {
+      box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+    }
+  }
+}
+
+// Styles for loading overlay with animation
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #212529;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.4s ease-in-out;
+  border-radius: 0.375rem;
+}
+
+.loading-content {
+  text-align: center;
+  color: #6c757d;
+  transition: all 0.3s ease-in-out;
+}
+
+.loading-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+
+  .loading-content {
+    animation: fadeInUp 0.5s ease-in-out;
+  }
+}
+
+.loading-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  pointer-events: none;
+
+  .loading-content {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+// Styles for main content with animation
+.content-container {
+  transition: all 0.4s ease-in-out 0.1s;
+}
+
+.content-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.content-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  pointer-events: none;
+}
+
+// Animation for operation results
+.test-result-animation {
+  animation: slideInDown 0.2s ease-in-out;
+
+  &.alert-success {
+    border-left: 4px solid #198754;
+  }
+
+  &.alert-danger {
+    border-left: 4px solid #dc3545;
+  }
+}
+
+// Spinner animation
+.spinner-border {
+  animation: spinner-border 0.75s linear infinite;
+}
+
+// Keyframes for animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 100px;
+  }
+}
+
+@keyframes spinner-border {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Smooth transitions for inputs on focus
+.form-control {
+  transition: all 0.2s ease-in-out;
+
+  &:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Button animation
+.btn {
+  transition: all 0.2s ease-in-out;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+// List group item animation
+.list-group-item {
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateX(5px);
+  }
+}

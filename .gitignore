@@ -1,2 +1,44 @@
 *.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
 *.log
+*.log.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env.local
+.env.*.local
+
+# Frontend
+web/node_modules/
+web/dist/
+web/.angular/
+web/*.log
+
+# Alembic
+alembic/__pycache__/
+alembic/versions/__pycache__/

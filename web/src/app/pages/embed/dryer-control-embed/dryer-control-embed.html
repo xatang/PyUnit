@@ -1,0 +1,89 @@
+<div class="embed-container">
+	<div class="embed-header">
+		<h5 class="embed-title">
+			<i class="bi bi-sliders me-2"></i>
+			{{ summary?.name || ('Dryer ' + dryerId) }}
+		</h5>
+		<span class="dryer-status-badge" [ngClass]="getStatusClass()">
+			{{ getStatusLabel() }}
+		</span>
+	</div>
+
+	<div class="embed-content" *ngIf="summary">
+		<!-- Status Summary -->
+		<div class="status-summary">
+			<div class="metric-row">
+				<div class="metric-item">
+					<i class="bi bi-thermometer-half text-danger"></i>
+					<span class="metric-value">{{ summary.temperature !== undefined ? summary.temperature.toFixed(1) : '--.-' }}°C</span>
+				</div>
+				<div class="metric-item">
+					<i class="bi bi-droplet-half text-info"></i>
+					<span class="metric-value">{{ summary.humidity !== undefined ? summary.humidity.toFixed(1) : '--.-' }}%</span>
+				</div>
+			</div>
+
+			<div class="metric-row">
+				<div class="metric-item" *ngIf="summary.heaterOn !== undefined">
+					<i class="bi bi-fire" [class.text-danger]="summary.heaterOn" [class.text-muted]="!summary.heaterOn"></i>
+					<span class="metric-value">{{ summary.heaterOn ? 'ON' : 'OFF' }}</span>
+				</div>
+				<div class="metric-item" *ngIf="summary.servoOpen !== undefined">
+					<i class="bi" [ngClass]="summary.servoOpen ? 'bi-door-open text-primary' : 'bi-door-closed text-muted'"></i>
+					<span class="metric-value">{{ summary.servoOpen ? 'OPEN' : 'CLOSED' }}</span>
+				</div>
+			</div>
+
+			<div class="metric-row" *ngIf="summary.timeLeftDryingSeconds != null">
+				<div class="metric-item time-left">
+					<i class="bi bi-clock text-warning"></i>
+					<span class="metric-value">{{ formatTimeLeft(summary.timeLeftDryingSeconds) }}</span>
+				</div>
+			</div>
+
+			<div class="current-preset" *ngIf="summary.currentPresetName && ['drying','timer_drying','humidity_storage','temperature_storage'].includes(summary.status||'')">
+				<span class="badge bg-info text-dark">{{ summary.currentPresetName }}</span>
+			</div>
+		</div>
+
+		<!-- Presets -->
+		<div class="presets-section">
+			<div class="section-label">Presets</div>
+			<div class="presets-grid" *ngIf="filteredPresets.length > 0">
+				<button
+					type="button"
+					class="btn btn-sm preset-btn"
+					*ngFor="let p of filteredPresets"
+					(click)="onSelectPreset(p)"
+					[class.selected]="selectedPresetId === p.id">
+					{{ p.name }}
+				</button>
+			</div>
+			<div class="text-muted small" *ngIf="filteredPresets.length === 0">
+				(no presets)
+			</div>
+		</div>
+
+		<!-- Controls -->
+		<div class="controls-section">
+			<button
+				class="btn btn-success btn-control"
+				[disabled]="!selectedPresetId || starting"
+				(click)="onStart()">
+				<i class="bi bi-play-fill me-1" *ngIf="!starting"></i>
+				<span *ngIf="!starting">Start</span>
+				<span *ngIf="starting" class="spinner-border spinner-border-sm"></span>
+			</button>
+			<button
+				class="btn btn-danger btn-control"
+				[disabled]="!summary || summary.status !== 'drying'"
+				(click)="onStop()">
+				<i class="bi bi-stop-fill me-1"></i>Stop
+			</button>
+		</div>
+	</div>
+
+	<div class="embed-content" *ngIf="!summary">
+		<div class="text-muted text-center">Loading...</div>
+	</div>
+</div>

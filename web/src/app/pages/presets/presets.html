@@ -1,0 +1,248 @@
+<div class="card config-card">
+    <div class="card-header text-white">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-collection me-2"></i>Preset Management
+        </h5>
+    </div>
+    <div class="card-body position-relative" style="min-height: 500px;">
+        <!-- Индикатор загрузки -->
+        <div class="loading-overlay"
+             [class.loading-visible]="isLoading"
+             [class.loading-hidden]="!isLoading">
+            <div class="loading-content">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 mb-0">Loading presets...</p>
+            </div>
+        </div>
+
+        <!-- Основной контент -->
+        <div class="content-container"
+             [class.content-visible]="!isLoading"
+             [class.content-hidden]="isLoading">
+
+            <!-- Список пресетов -->
+            <div class="mb-4" *ngIf="presets.length > 0">
+                <h6 class="mb-3">Existing Presets</h6>
+                <div class="list-group">
+                    <div *ngFor="let preset of presets" class="list-group-item d-flex align-items-center">
+                        <div class="flex-grow-1 me-3" (click)="editPreset(preset)" style="cursor: pointer;">
+                            <div class="text-start">
+                                <strong>{{ preset.name }}</strong>
+                            </div>
+                            <div class="small text-muted">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div>
+                                        <i class="bi bi-thermometer-half me-1"></i>
+                                        <span>{{ preset.temperature }}°C</span>
+                                    </div>
+                                    <div>
+                                        <i class="bi bi-moisture me-1"></i>
+                                        <span>{{ preset.humidity }}%</span>
+                                    </div>
+                                    <div>
+                                        <i class="bi bi-clock-history me-1"></i>
+                                        <span>{{ preset.dry_time }} min</span>
+                                    </div>
+                                    <div>
+                                        <span *ngIf="preset.storage_type === 'temperature'" class="badge bg-primary ms-2">
+                                            <i class="bi bi-thermometer-half me-1"></i>{{ preset.storage_temperature }}°C Storage
+                                        </span>
+                                        <span *ngIf="preset.storage_type === 'humidity'" class="badge bg-success ms-2">
+                                            <i class="bi bi-moisture me-1"></i> <i class="bi bi-plus-slash-minus"></i>{{ preset.humidity_storage_range }}% Storage
+                                        </span>
+                                        <span *ngIf="preset.storage_type === 'none'" class="badge bg-secondary ms-2">
+                                            <i class="bi bi-x-circle me-1"></i>No Storage
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="mt-1" *ngIf="getDryerCount(preset.dryers) > 0">
+                                    <small class="text-info">
+                                        <i class="bi bi-hdd-rack me-1"></i>
+                                        Dryers: {{ getDryerNames(preset.dryers) }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm" (click)="deletePreset(preset.id)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Форма добавления/редактирования пресета -->
+            <h6 class="mb-3">{{ editingPreset ? 'Edit Preset' : 'Add New Preset' }}</h6>
+            <form [formGroup]="presetForm" (ngSubmit)="onSubmit()">
+                <!-- Название пресета -->
+                <div class="mb-3">
+                    <label for="presetName" class="form-label required-field">Preset Name</label>
+                    <input type="text" class="form-control" id="presetName"
+                           formControlName="name"
+                           placeholder="Enter preset name">
+                    <div *ngIf="presetForm.get('name')?.invalid && presetForm.get('name')?.touched" class="invalid-feedback d-block">
+                        Preset name is required
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Температура -->
+                    <div class="col-md-6 mb-3">
+                        <label for="temperature" class="form-label required-field">Temperature (°C)</label>
+                        <input type="number" class="form-control" id="temperature"
+                               formControlName="temperature"
+                               placeholder="Enter temperature">
+                        <div *ngIf="presetForm.get('temperature')?.invalid && presetForm.get('temperature')?.touched" class="invalid-feedback d-block">
+                            <div *ngIf="presetForm.get('temperature')?.errors?.['required']">Temperature is required</div>
+                            <div *ngIf="presetForm.get('temperature')?.errors?.['min']">Temperature cannot be negative</div>
+                        </div>
+                        <div class="form-text">Target drying temperature</div>
+                    </div>
+
+                    <!-- Максимальная дельта температуры -->
+                    <div class="col-md-6 mb-3">
+                        <label for="maxTempDelta" class="form-label required-field">Max Temperature Delta (°C)</label>
+                        <input type="number" class="form-control" id="maxTempDelta"
+                               formControlName="max_temperature_delta"
+                               placeholder="Enter max temperature delta">
+                        <div class="form-text">Maximum temperature overshoot delta</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Влажность -->
+                    <div class="col-md-6 mb-3">
+                        <label for="humidity" class="form-label required-field">Humidity (%)</label>
+                        <input type="number" class="form-control" id="humidity"
+                               formControlName="humidity"
+                               placeholder="Enter humidity">
+                        <div *ngIf="presetForm.get('humidity')?.invalid && presetForm.get('humidity')?.touched" class="invalid-feedback d-block">
+                            <div *ngIf="presetForm.get('humidity')?.errors?.['required']">Humidity is required</div>
+                            <div *ngIf="presetForm.get('humidity')?.errors?.['min']">Humidity cannot be negative</div>
+                            <div *ngIf="presetForm.get('humidity')?.errors?.['max']">Humidity cannot exceed 100%</div>
+                        </div>
+                        <div class="form-text">Target humidity</div>
+                    </div>
+
+                    <!-- Время сушки -->
+                    <div class="col-md-6 mb-3">
+                        <label for="dryTime" class="form-label required-field">Dry Time (minutes)</label>
+                        <input type="number" class="form-control" id="dryTime"
+                               formControlName="dry_time"
+                               placeholder="Enter dry time">
+                        <div *ngIf="presetForm.get('dry_time')?.invalid && presetForm.get('dry_time')?.touched" class="invalid-feedback d-block">
+                            <div *ngIf="presetForm.get('dry_time')?.errors?.['required']">Dry time is required</div>
+                            <div *ngIf="presetForm.get('dry_time')?.errors?.['min']">Dry time cannot be negative</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Тип хранения -->
+                <div class="mb-3">
+                    <label class="form-label">Storage Type</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" id="noStorage"
+                               formControlName="storage_type" value="none">
+                        <label class="form-check-label" for="noStorage">
+                            No Storage
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" id="temperatureStorage"
+                               formControlName="storage_type" value="temperature">
+                        <label class="form-check-label" for="temperatureStorage">
+                            Temperature Storage
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" id="humidityStorage"
+                               formControlName="storage_type" value="humidity">
+                        <label class="form-check-label" for="humidityStorage">
+                            Humidity Storage
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Температура хранения -->
+                <div class="mb-3" *ngIf="presetForm.get('storage_type')?.value === 'temperature'">
+                    <label for="storageTemp" class="form-label required-field">Storage Temperature (°C)</label>
+                    <input type="number" class="form-control" id="storageTemp"
+                           formControlName="storage_temperature"
+                           placeholder="Enter storage temperature">
+                    <div *ngIf="presetForm.get('storage_temperature')?.invalid && presetForm.get('storage_temperature')?.touched" class="invalid-feedback d-block">
+                        <div *ngIf="presetForm.get('storage_temperature')?.errors?.['required']">Storage temperature is required</div>
+                        <div *ngIf="presetForm.get('storage_temperature')?.errors?.['min']">Storage temperature cannot be negative</div>
+                    </div>
+                    <div class="form-text">Temperature for storage after drying</div>
+                </div>
+
+                <!-- Параметры для Humidity Storage -->
+                <div *ngIf="presetForm.get('storage_type')?.value === 'humidity'">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="humidityStorageDryTime" class="form-label required-field">Dry Time (minutes)</label>
+                            <input type="number" class="form-control" id="humidityStorageDryTime"
+                                   formControlName="humidity_storage_dry_time"
+                                   placeholder="Enter humidity storage dry time">
+                            <div *ngIf="presetForm.get('humidity_storage_dry_time')?.invalid && presetForm.get('humidity_storage_dry_time')?.touched" class="invalid-feedback d-block">
+                                <div *ngIf="presetForm.get('humidity_storage_dry_time')?.errors?.['required']">Humidity storage dry time is required</div>
+                                <div *ngIf="presetForm.get('humidity_storage_dry_time')?.errors?.['min']">Dry time cannot be negative</div>
+                            </div>
+                            <div class="form-text">Drying time when the Humidity Storage Range is exceeded</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="humidityStorageRange" class="form-label required-field">Humidity Storage Range (%)</label>
+                            <input type="number" class="form-control" id="humidityStorageRange"
+                                   formControlName="humidity_storage_range"
+                                   placeholder="Enter humidity storage range">
+                            <div *ngIf="presetForm.get('humidity_storage_range')?.invalid && presetForm.get('humidity_storage_range')?.touched" class="invalid-feedback d-block">
+                                <div *ngIf="presetForm.get('humidity_storage_range')?.errors?.['required']">Humidity storage range is required</div>
+                                <div *ngIf="presetForm.get('humidity_storage_range')?.errors?.['min']">Range cannot be negative</div>
+                                <div *ngIf="presetForm.get('humidity_storage_range')?.errors?.['max']">Range cannot exceed 100%</div>
+                            </div>
+                            <div class="form-text">Allowed humidity range during storage</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Выбор сушилок -->
+                <div class="mb-3" *ngIf="availableDryers.length > 0">
+                    <label class="form-label">Assign to Dryers</label>
+                    <div class="dryer-buttons-container">
+                        <div class="d-flex flex-wrap gap-2">
+                          <button type="button"
+                                  *ngFor="let dryer of availableDryers"
+                                  class="btn dryer-btn"
+                                  [class.btn-primary]="isDryerSelected(dryer.id)"
+                                  [class.btn-outline-primary]="!isDryerSelected(dryer.id)"
+                                  (click)="toggleDryerSelection(dryer.id)">
+                            <i class="bi"
+                              [class.bi-check-circle-fill]="isDryerSelected(dryer.id)"
+                              [class.bi-circle]="!isDryerSelected(dryer.id)"></i>
+                            {{ dryer.name }}
+                          </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки действий -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button type="button" class="btn btn-outline-secondary me-md-2"
+                            (click)="resetForm()"
+                            [disabled]="isSaving">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>
+                        Reset
+                    </button>
+                    <button type="submit" class="btn btn-primary"
+                            [disabled]="presetForm.invalid || isSaving">
+                        <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        <i *ngIf="!isSaving" class="bi bi-check-circle me-1"></i>
+                        {{ isSaving ? 'Saving...' : (editingPreset ? 'Update Preset' : 'Add Preset') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

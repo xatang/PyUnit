@@ -1,0 +1,343 @@
+<div class="card config-card">
+    <div class="card-header bg-info text-white">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-gear me-2"></i>Dryer Units Management
+        </h5>
+    </div>
+    <div class="card-body position-relative" style="min-height: 500px;">
+        <!-- Индикатор загрузки -->
+        <div class="loading-overlay"
+             [class.loading-visible]="isLoading"
+             [class.loading-hidden]="!isLoading">
+            <div class="loading-content">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 mb-0">Loading dryers...</p>
+            </div>
+        </div>
+
+        <!-- Основной контент -->
+        <div class="content-container"
+             [class.content-visible]="!isLoading"
+             [class.content-hidden]="isLoading">
+
+            <!-- Список сушилок -->
+            <div class="mb-4" *ngIf="dryers.length > 0">
+                <h6 class="mb-3">Existing Dryer Units</h6>
+                <div class="list-group">
+                    <button *ngFor="let dryer of dryers" class="list-group-item d-flex justify-content-between align-items-center" type="button" (click)="editDryer(dryer)">
+                        <div>
+                            <strong>{{ dryer.name }}</strong>
+                        </div>
+                        <button type="button" class="btn btn-outline-danger" (click)="deleteDryer(dryer.id)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Форма добавления/редактирования -->
+            <h6 class="mb-3">{{ editingDryer ? 'Edit Dryer Unit' : 'Add New Dryer Unit' }}</h6>
+            <form id="dryerForm" [formGroup]="dryerForm" (ngSubmit)="onSubmit()">
+
+                <!-- Название сушилки -->
+                <div class="mb-3">
+                    <label for="dryerName" class="form-label required-field">Dryer Name</label>
+                    <input type="text" class="form-control" id="dryerName"
+                           formControlName="name"
+                           placeholder="Enter dryer name"
+                           [class.is-invalid]="formControls['name'].invalid && (formControls['name'].dirty || formControls['name'].touched)">
+                    <div *ngIf="formControls['name'].invalid && (formControls['name'].dirty || formControls['name'].touched)" class="invalid-feedback">
+                        Dryer name is required
+                    </div>
+                </div>
+
+                <!-- Конфигурация нагревателя -->
+                <div class="card mb-3" formGroupName="config">
+                    <div class="card-header bg-primary">
+                        <h6 class="mb-0">Heater Configuration</h6>
+                    </div>
+                    <div class="card-body" formGroupName="heater">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="heaterName" class="form-label required-field">Heater Name</label>
+                                <select class="form-select" id="heaterName"
+                                        formControlName="name"
+                                        [class.is-invalid]="heaterControls['name'].invalid && (heaterControls['name'].dirty || heaterControls['name'].touched)">
+                                    <option value="">Select Heater</option>
+                                    <option *ngFor="let heater of heaters" [value]="heater">{{ heater }}</option>
+                                </select>
+                                <div *ngIf="heaterControls['name'].invalid && (heaterControls['name'].dirty || heaterControls['name'].touched)" class="invalid-feedback">
+                                    Heater name is required
+                                </div>
+                                <div class="form-text" *ngIf="heaters.length === 0">
+                                    No heaters found. Make sure heaters are configured in Moonraker.
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="fanName" class="form-label required-field">Fan Name</label>
+                                <select class="form-select" id="fanName"
+                                        formControlName="fan_name"
+                                        [class.is-invalid]="heaterControls['fan_name'].invalid && (heaterControls['fan_name'].dirty || heaterControls['fan_name'].touched)">
+                                    <option value="">Select Fan</option>
+                                    <option *ngFor="let fan of fans" [value]="fan">{{ fan }}</option>
+                                </select>
+                                <div *ngIf="heaterControls['fan_name'].invalid && (heaterControls['fan_name'].dirty || heaterControls['fan_name'].touched)" class="invalid-feedback">
+                                    Fan name is required
+                                </div>
+                                <div class="form-text" *ngIf="fans.length === 0">
+                                    No fans found. Make sure fans are configured in Moonraker.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Конфигурация LED -->
+                <div class="card mb-3" formGroupName="config">
+                    <div class="card-header bg-primary">
+                        <h6 class="mb-0">LED Configuration</h6>
+                    </div>
+                    <div class="card-body" formGroupName="led">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="ledName" class="form-label required-field">LED Name</label>
+                                <select class="form-select" id="ledName"
+                                        formControlName="name"
+                                        [class.is-invalid]="ledControls['name'].invalid && (ledControls['name'].dirty || ledControls['name'].touched)">
+                                    <option value="">Select LED</option>
+                                    <option *ngFor="let led of leds" [value]="led">{{ led }}</option>
+                                </select>
+                                <div *ngIf="ledControls['name'].invalid && (ledControls['name'].dirty || ledControls['name'].touched)" class="invalid-feedback">
+                                    LED name is required
+                                </div>
+                                <div class="form-text" *ngIf="leds.length === 0">
+                                    No LEDs found. Make sure LEDs are configured in Moonraker.
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="ledBrightness" class="form-label required-field">LED Brightness (%)</label>
+                                <input type="number" class="form-control" id="ledBrightness"
+                                       formControlName="brightness"
+                                       placeholder="Enter brightness"
+                                       [class.is-invalid]="ledControls['brightness'].invalid && (ledControls['brightness'].dirty || ledControls['brightness'].touched)">
+                                <div *ngIf="ledControls['brightness'].invalid && (ledControls['brightness'].dirty || ledControls['brightness'].touched)" class="invalid-feedback">
+                                    <div *ngIf="ledControls['brightness'].errors?.['required']">Brightness is required</div>
+                                    <div *ngIf="ledControls['brightness'].errors?.['min']">Brightness cannot be negative</div>
+                                    <div *ngIf="ledControls['brightness'].errors?.['max']">Brightness cannot exceed 100%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Конфигурация влажности -->
+                <div class="card mb-3" formGroupName="config">
+                    <div class="card-header bg-primary">
+                        <h6 class="mb-0">Humidity Configuration</h6>
+                    </div>
+                    <div class="card-body" formGroupName="humidity">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="openThreshold" class="form-label required-field">Open Threshold</label>
+                                <input type="number" class="form-control" id="openThreshold"
+                                       formControlName="open_threshold"
+                                       placeholder="Enter open threshold"
+                                       step="0.1"
+                                       [class.is-invalid]="humidityControls['open_threshold'].invalid && (humidityControls['open_threshold'].dirty || humidityControls['open_threshold'].touched)">
+                                <div *ngIf="humidityControls['open_threshold'].invalid && (humidityControls['open_threshold'].dirty || humidityControls['open_threshold'].touched)" class="invalid-feedback">
+                                    <div *ngIf="humidityControls['open_threshold'].errors?.['required']">Open threshold is required</div>
+                                    <div *ngIf="humidityControls['open_threshold'].errors?.['min']">Threshold cannot be negative</div>
+                                </div>
+                                <div class="form-text">Threshold for opening the shutter during drying</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="closeThreshold" class="form-label required-field">Close Threshold</label>
+                                <input type="number" class="form-control" id="closeThreshold"
+                                       formControlName="close_threshold"
+                                       placeholder="Enter close threshold"
+                                       step="0.1"
+                                       [class.is-invalid]="humidityControls['close_threshold'].invalid && (humidityControls['close_threshold'].dirty || humidityControls['close_threshold'].touched)">
+                                <div *ngIf="humidityControls['close_threshold'].invalid && (humidityControls['close_threshold'].dirty || humidityControls['close_threshold'].touched)" class="invalid-feedback">
+                                    <div *ngIf="humidityControls['close_threshold'].errors?.['required']">Close threshold is required</div>
+                                    <div *ngIf="humidityControls['close_threshold'].errors?.['min']">Threshold cannot be negative</div>
+                                </div>
+                                <div class="form-text">Threshold for closing the shutter during drying</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="plateauDuration" class="form-label required-field">Plateau Duration (sec)</label>
+                                <input type="number" class="form-control" id="plateauDuration"
+                                       formControlName="plateau_duration"
+                                       placeholder="Enter plateau duration"
+                                       [class.is-invalid]="humidityControls['plateau_duration'].invalid && (humidityControls['plateau_duration'].dirty || humidityControls['plateau_duration'].touched)">
+                                <div *ngIf="humidityControls['plateau_duration'].invalid && (humidityControls['plateau_duration'].dirty || humidityControls['plateau_duration'].touched)" class="invalid-feedback">
+                                    <div *ngIf="humidityControls['plateau_duration'].errors?.['required']">Plateau duration is required</div>
+                                    <div *ngIf="humidityControls['plateau_duration'].errors?.['min']">Duration cannot be negative</div>
+                                </div>
+                                <div class="form-text">Number of seconds to evaluate reaching a plateau</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="plateauWindow" class="form-label required-field">Plateau Window Size</label>
+                                <input type="number" class="form-control" id="plateauWindow"
+                                       formControlName="plateau_window_size"
+                                       placeholder="Enter window size"
+                                       [class.is-invalid]="humidityControls['plateau_window_size'].invalid && (humidityControls['plateau_window_size'].dirty || humidityControls['plateau_window_size'].touched)">
+                                <div *ngIf="humidityControls['plateau_window_size'].invalid && (humidityControls['plateau_window_size'].dirty || humidityControls['plateau_window_size'].touched)" class="invalid-feedback">
+                                    <div *ngIf="humidityControls['plateau_window_size'].errors?.['required']">Window size is required</div>
+                                    <div *ngIf="humidityControls['plateau_window_size'].errors?.['min']">Window size must be at least 1</div>
+                                </div>
+                                <div class="form-text">Window size for evaluating plateau values</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="timerRange" class="form-label required-field">Timer Drying Range</label>
+                                <input type="number" class="form-control" id="timerRange"
+                                       formControlName="timer_drying_range"
+                                       placeholder="Enter timer range"
+                                       step="0.1"
+                                       [class.is-invalid]="humidityControls['timer_drying_range'].invalid && (humidityControls['timer_drying_range'].dirty || humidityControls['timer_drying_range'].touched)">
+                                <div *ngIf="humidityControls['timer_drying_range'].invalid && (humidityControls['timer_drying_range'].dirty || humidityControls['timer_drying_range'].touched)" class="invalid-feedback">
+                                    <div *ngIf="humidityControls['timer_drying_range'].errors?.['required']">Is required</div>
+                                    <div *ngIf="humidityControls['timer_drying_range'].errors?.['min']">Cannot be negative</div>
+                                </div>
+                                <div class="form-text">Allowed humidity fluctuation during Timer Drying</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Конфигурация температуры -->
+                <div class="card mb-3" formGroupName="config">
+                    <div class="card-header bg-primary">
+                        <h6 class="mb-0">Temperature Configuration</h6>
+                    </div>
+                    <div class="card-body" formGroupName="temperature">
+                        <div class="mb-3">
+                            <label for="tempSensor" class="form-label required-field">Temperature Sensor Name</label>
+                            <select class="form-select" id="tempSensor"
+                                   formControlName="sensor_name"
+                                   [class.is-invalid]="temperatureControls['sensor_name'].invalid && (temperatureControls['sensor_name'].dirty || temperatureControls['sensor_name'].touched)">
+                                <option value="">Select Temperature Sensor</option>
+                                <option *ngFor="let sensor of temperatureSensors" [value]="sensor">{{ sensor }}</option>
+                            </select>
+                            <div *ngIf="temperatureControls['sensor_name'].invalid && (temperatureControls['sensor_name'].dirty || temperatureControls['sensor_name'].touched)" class="invalid-feedback">
+                                Temperature sensor name is required
+                            </div>
+                            <div class="form-text" *ngIf="temperatureSensors.length === 0">
+                                No temperature sensors found. Make sure sensors are configured in Moonraker.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Конфигурация серво -->
+                <div class="card mb-3" formGroupName="config">
+                    <div class="card-header bg-primary">
+                        <h6 class="mb-0">Servo Configuration</h6>
+                    </div>
+                    <div class="card-body" formGroupName="servo">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="servoName" class="form-label required-field">Servo Name</label>
+                                <select class="form-select" id="servoName"
+                                       formControlName="name"
+                                       [class.is-invalid]="servoControls['name'].invalid && (servoControls['name'].dirty || servoControls['name'].touched)">
+                                    <option value="">Select Servo</option>
+                                    <option *ngFor="let servo of servos" [value]="servo">{{ servo }}</option>
+                                </select>
+                                <div *ngIf="servoControls['name'].invalid && (servoControls['name'].dirty || servoControls['name'].touched)" class="invalid-feedback">
+                                    Servo name is required
+                                </div>
+                                <div class="form-text" *ngIf="servos.length === 0">
+                                    No servos found. Make sure servos are configured in Moonraker.
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="closeAngle" class="form-label required-field">Close Angle</label>
+                                <input type="number" class="form-control" id="closeAngle"
+                                       formControlName="close_angle"
+                                       placeholder="Enter close angle"
+                                       [class.is-invalid]="servoControls['close_angle'].invalid && (servoControls['close_angle'].dirty || servoControls['close_angle'].touched)">
+                                <div *ngIf="servoControls['close_angle'].invalid && (servoControls['close_angle'].dirty || servoControls['close_angle'].touched)" class="invalid-feedback">
+                                    <div *ngIf="servoControls['close_angle'].errors?.['required']">Close angle is required</div>
+                                    <div *ngIf="servoControls['close_angle'].errors?.['min']">Angle cannot be negative</div>
+                                    <div *ngIf="servoControls['close_angle'].errors?.['max']">Angle cannot exceed 360°</div>
+                                </div>
+                                <div class="form-text">Servo angle in the "closed" position</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="openAngle" class="form-label required-field">Open Angle</label>
+                                <input type="number" class="form-control" id="openAngle"
+                                       formControlName="open_angle"
+                                       placeholder="Enter open angle"
+                                       [class.is-invalid]="servoControls['open_angle'].invalid && (servoControls['open_angle'].dirty || servoControls['open_angle'].touched)">
+                                <div *ngIf="servoControls['open_angle'].invalid && (servoControls['open_angle'].dirty || servoControls['open_angle'].touched)" class="invalid-feedback">
+                                    <div *ngIf="servoControls['open_angle'].errors?.['required']">Open angle is required</div>
+                                    <div *ngIf="servoControls['open_angle'].errors?.['min']">Angle cannot be negative</div>
+                                    <div *ngIf="servoControls['open_angle'].errors?.['max']">Angle cannot exceed 360°</div>
+                                </div>
+                                <div class="form-text">Servo angle in the "open" position</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="softStep" class="form-label required-field">Soft Step (deg)</label>
+                                <input type="number" class="form-control" id="softStep"
+                                       formControlName="soft_step"
+                                       placeholder="Step angle"
+                                       [class.is-invalid]="servoControls['soft_step'].invalid && (servoControls['soft_step'].dirty || servoControls['soft_step'].touched)">
+                                <div *ngIf="servoControls['soft_step'].invalid && (servoControls['soft_step'].dirty || servoControls['soft_step'].touched)" class="invalid-feedback">
+                                    <div *ngIf="servoControls['soft_step'].errors?.['required']">Soft step is required</div>
+                                    <div *ngIf="servoControls['soft_step'].errors?.['min']">Must be >= 1</div>
+                                </div>
+                                <div class="form-text">Increment per smooth movement iteration</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="softSleep" class="form-label required-field">Soft Sleep (s)</label>
+                                <input type="number" step="0.01" class="form-control" id="softSleep"
+                                       formControlName="soft_sleep"
+                                       placeholder="Delay between steps"
+                                       [class.is-invalid]="servoControls['soft_sleep'].invalid && (servoControls['soft_sleep'].dirty || servoControls['soft_sleep'].touched)">
+                                <div *ngIf="servoControls['soft_sleep'].invalid && (servoControls['soft_sleep'].dirty || servoControls['soft_sleep'].touched)" class="invalid-feedback">
+                                    <div *ngIf="servoControls['soft_sleep'].errors?.['required']">Soft sleep is required</div>
+                                    <div *ngIf="servoControls['soft_sleep'].errors?.['min']">Must be > 0</div>
+                                </div>
+                                <div class="form-text">Pause between incremental servo steps</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="minInterval" class="form-label required-field">Min Interval (s)</label>
+                                <input type="number" class="form-control" id="minInterval"
+                                       formControlName="min_interval"
+                                       placeholder="Cooldown seconds"
+                                       [class.is-invalid]="servoControls['min_interval'].invalid && (servoControls['min_interval'].dirty || servoControls['min_interval'].touched)">
+                                <div *ngIf="servoControls['min_interval'].invalid && (servoControls['min_interval'].dirty || servoControls['min_interval'].touched)" class="invalid-feedback">
+                                    <div *ngIf="servoControls['min_interval'].errors?.['required']">Min interval is required</div>
+                                    <div *ngIf="servoControls['min_interval'].errors?.['min']">Must be >= 1</div>
+                                </div>
+                                <div class="form-text">Minimum seconds between servo open/close actions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки действий -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button type="button" class="btn btn-outline-secondary me-md-2"
+                            (click)="resetForm()"
+                            [disabled]="isSaving">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>
+                        Reset
+                    </button>
+                    <button type="submit" class="btn btn-primary"
+                            [disabled]="dryerForm.invalid || isSaving">
+                        <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        <i *ngIf="!isSaving" class="bi bi-check-circle me-1"></i>
+                        {{ isSaving ? 'Saving...' : (editingDryer ? 'Update Dryer' : 'Add Dryer') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
