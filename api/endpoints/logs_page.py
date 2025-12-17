@@ -23,13 +23,25 @@ async def app_log_websocket(websocket: WebSocket):
     for rotated in ("app.log.1", "app.log"):
         old_logs = await read_log_file(rotated)
         for log in old_logs:
-            await websocket.send_text(log)
+            try:
+                await websocket.send_text(log)
+            except Exception as e:
+                logger.debug("Failed to send log line: %s", e)
+                break
     try:
         while True:
-            await websocket.receive_text()  # ignored (keep-alive)
+            try:
+                await websocket.receive_text()  # ignored (keep-alive)
+            except RuntimeError as e:
+                logger.debug("WS receive error (client likely disconnected): %s", e)
+                break
     except WebSocketDisconnect:
+        logger.debug("WS /logs/app disconnect (explicit)")
+    except Exception as e:
+        logger.error("WS /logs/app unexpected error: %s", e)
+    finally:
         webSocketManager.disconnect(websocket)
-        logger.debug("WS /logs/app disconnect")
+        logger.debug("WS /logs/app cleanup complete")
 
 
 @router.websocket("/dryer")
@@ -40,13 +52,25 @@ async def dryer_log_websocket(websocket: WebSocket):
     for rotated in ("dryer.log.1", "dryer.log"):
         old_logs = await read_log_file(rotated)
         for log in old_logs:
-            await websocket.send_text(log)
+            try:
+                await websocket.send_text(log)
+            except Exception as e:
+                logger.debug("Failed to send log line: %s", e)
+                break
     try:
         while True:
-            await websocket.receive_text()  # ignored (keep-alive)
+            try:
+                await websocket.receive_text()  # ignored (keep-alive)
+            except RuntimeError as e:
+                logger.debug("WS receive error (client likely disconnected): %s", e)
+                break
     except WebSocketDisconnect:
+        logger.debug("WS /logs/dryer disconnect (explicit)")
+    except Exception as e:
+        logger.error("WS /logs/dryer unexpected error: %s", e)
+    finally:
         webSocketManager.disconnect(websocket)
-        logger.debug("WS /logs/dryer disconnect")
+        logger.debug("WS /logs/dryer cleanup complete")
 
 
 async def read_log_file(

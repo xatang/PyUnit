@@ -41,12 +41,22 @@ async def dryers_stats_websocket(websocket: WebSocket, db: AsyncSession = Depend
         await websocket.send_text(json.dumps(history))
     except Exception as e:  # non-fatal, continue with live stream
         logger.warning("Failed to send history over WS error=%s", e)
+    
     try:
         while True:
-            await websocket.receive_text()  # currently ignored (keep-alive / future commands)
+            try:
+                await websocket.receive_text()  # currently ignored (keep-alive / future commands)
+            except RuntimeError as e:
+                # WebSocket not connected or already closed
+                logger.debug("WS receive error (client likely disconnected): %s", e)
+                break
     except WebSocketDisconnect:
+        logger.debug("WS /dashboard/dryers disconnect (explicit)")
+    except Exception as e:
+        logger.error("WS /dashboard/dryers unexpected error: %s", e)
+    finally:
         webSocketManager.disconnect(websocket)
-        logger.debug("WS /dashboard/dryers disconnect")
+        logger.debug("WS /dashboard/dryers cleanup complete")
 
 
 @router.post("/control/set-preset/{dryer_id}")
