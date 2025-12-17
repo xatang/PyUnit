@@ -17,6 +17,8 @@ services:
     volumes:
       - pyunit_data:/app/data
       - ./pyunit.db:/app/pyunit.db
+      - ./pyunit.db-wal:/app/pyunit.db-wal
+      - ./pyunit.db-shm:/app/pyunit.db-shm
       - ./app.log:/app/app.log
       - ./dryer.log:/app/dryer.log
     restart: unless-stopped

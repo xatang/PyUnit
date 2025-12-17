@@ -137,6 +137,8 @@ fi
 echo ""
 echo "Initializing required files..."
 touch pyunit.db
+touch pyunit.db-wal
+touch pyunit.db-shm
 touch app.log
 touch dryer.log
 echo "✓ Files initialized"
