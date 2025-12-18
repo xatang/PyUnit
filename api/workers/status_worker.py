@@ -62,8 +62,27 @@ class StatusWorker:
                         except HTTPException:
                             logger.error("Dryer missing during update dryer_id=%s", db_dryer.id)
                 if update_result:
-                    update_result = ','.join(update_result)
-                    await webSocketManager.broadcast(f'[{update_result}]', 'dryers_stats')
+                    update_result_str = ','.join(update_result)
+                    aggregated_json = f'[{update_result_str}]'
+                    
+                    # Broadcast to legacy /dryers endpoint (all dryers)
+                    await webSocketManager.broadcast(aggregated_json, 'dryers_stats')
+                    
+                    # Broadcast individual updates to dryer-specific channels
+                    for log_json in update_result:
+                        try:
+                            import json
+                            log_data = json.loads(log_json)
+                            dryer_id = log_data.get('dryer_id')
+                            if dryer_id:
+                                # Send to dryer-specific WebSocket channel
+                                await webSocketManager.broadcast(
+                                    f'[{log_json}]', 
+                                    f'dryer_{dryer_id}_stats'
+                                )
+                        except Exception as e:
+                            logger.warning("Failed to parse/broadcast individual log: %s", e)
+                            
                 end_time = datetime.utcnow()
                 delta_time = end_time - start_time
                 # Aim for ~1 second loop time

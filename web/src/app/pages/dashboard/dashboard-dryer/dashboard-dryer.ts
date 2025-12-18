@@ -61,26 +61,40 @@ export class DashboardDryer implements OnInit, OnDestroy {
   constructor(private route: ActivatedRoute, private dashboard: DashboardService, private toast: ToastService, private logger: LoggingService) {}
 
   ngOnInit(): void {
-    // Ensure websocket connection is active when entering directly via deep link
-    if (this.dashboard.getConnectionStatus && typeof this.dashboard.getConnectionStatus === 'function') {
-      const sub = this.dashboard.getConnectionStatus().subscribe(st => {
-        if (st === 'closed' || st === 'error') {
-          // Attempt a connect only once here; dashboard main page also calls connect.
-          if (!this.initiatedConnection) {
-            try { this.dashboard.connect(); this.initiatedConnection = true; } catch {}
-          }
-        }
-      });
-      this.subs.push(sub);
-    } else {
-      // Fallback: try connect immediately
-      try { this.dashboard.connect(); this.initiatedConnection = true; } catch {}
-    }
+    // Get dryer ID from route first
     this.subs.push(this.route.paramMap.subscribe(pm => {
       const val = pm.get('dryerId');
       this.dryerId = val ? +val : NaN;
+
+      // Connect in optimized 'single' mode for this specific dryer
+      if (Number.isFinite(this.dryerId) && !this.initiatedConnection) {
+        this.logger.info('DashboardDryer', 'Connecting in single mode', { dryerId: this.dryerId });
+        try {
+          // No limit - load all logs for time range, frontend filtering handles performance
+          this.dashboard.connect('single', this.dryerId);
+          this.initiatedConnection = true;
+        } catch (err) {
+          this.logger.error('DashboardDryer', 'Failed to connect', err);
+        }
+      }
+
       this.pickSummary();
     }));
+
+    // Fallback: ensure connection if status is closed/error
+    if (this.dashboard.getConnectionStatus && typeof this.dashboard.getConnectionStatus === 'function') {
+      const sub = this.dashboard.getConnectionStatus().subscribe(st => {
+        if ((st === 'closed' || st === 'error') && !this.initiatedConnection && Number.isFinite(this.dryerId)) {
+          this.logger.warn('DashboardDryer', 'Connection lost, reconnecting', { status: st });
+          try {
+            this.dashboard.connect('single', this.dryerId);
+            this.initiatedConnection = true;
+          } catch {}
+        }
+      });
+      this.subs.push(sub);
+    }
+
     this.subs.push(this.dashboard.getSummaries().subscribe(() => { this.pickSummary(); this.updateChart(); }));
     this.subs.push(this.dashboard.getConnectionStatus().subscribe((cs: any) => this.connectionStatus = cs));
     this.subs.push(this.dashboard.getPresets().subscribe((ps: PresetShort[]) => { this.presets = ps; this.filterPresets(); }));

@@ -7,52 +7,66 @@
 
 	<div class="top-cards d-grid gap-3 mb-3">
 		<!-- Status Card -->
-				<div class="card status-card p-3" *ngIf="summary as sm; else loadingSummary">
+		<div class="card status-card p-3" style="position: relative;">
+			<div *ngIf="summary as sm; else loadingSummary">
 				<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-						<div class="d-flex align-items-center gap-2 flex-wrap">
-							<h3 class="dryer-name m-0">{{ sm.name || ('Dryer '+dryerId) }}</h3>
-							<span *ngIf="['drying','timer_drying','humidity_storage','temperature_storage'].includes(sm.status||'')" class="badge bg-info text-dark">{{ sm.currentPresetName || '...' }}</span>
-						</div>
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<h3 class="dryer-name m-0">{{ sm.name || ('Dryer '+dryerId) }}</h3>
+						<span *ngIf="['drying','timer_drying','humidity_storage','temperature_storage'].includes(sm.status||'')" class="badge bg-info text-dark">{{ sm.currentPresetName || '...' }}</span>
+					</div>
 					<span class="dryer-status-inline" [ngClass]="getStatusClass()">{{ getStatusLabel() }}</span>
-			</div>
-			<div class="dryer-data two-rows mb-2">
-				<div class="row-top d-flex flex-wrap gap-3">
-							<div class="data-item"><div class="data-value temp-value"><i class="bi bi-thermometer-half me-1"></i>{{ sm.temperature !== undefined ? sm.temperature.toFixed(1) : '--.-' }}°C</div></div>
-							<div class="data-item"><div class="data-value humidity-value"><i class="bi bi-droplet-half me-1"></i>{{ sm.humidity !== undefined ? sm.humidity.toFixed(1) : '--.-' }}%</div></div>
-							<div class="data-item" *ngIf="sm.timeLeftDryingSeconds!=null"><div class="data-value time-left-value" title="Remaining drying time"><i class="bi bi-clock me-1"></i>{{ formatTimeLeft(sm.timeLeftDryingSeconds) }}</div></div>
 				</div>
-				<div class="row-bottom d-flex flex-wrap gap-3 mt-1">
-							<div class="data-item" *ngIf="sm.heaterOn !== undefined"><div class="data-value d-flex align-items-center" [class.text-danger]="sm.heaterOn" [class.text-muted]="!sm.heaterOn"><i class="bi bi-fire me-1" [ngClass]="sm.heaterOn ? 'bi-fire' : 'bi-fire text-muted'"></i><span>{{ sm.heaterOn ? 'ON' : 'OFF' }}</span></div></div>
-							<div class="data-item" *ngIf="sm.servoOpen !== undefined"><div class="data-value d-flex align-items-center" [class.text-primary]="sm.servoOpen" [class.text-muted]="!sm.servoOpen"><i class="bi me-1" [ngClass]="sm.servoOpen ? 'bi-door-open' : 'bi-door-closed'"></i><span>{{ sm.servoOpen ? 'OPEN' : 'CLOSED' }}</span></div></div>
+				<div class="dryer-data two-rows mb-2">
+					<div class="row-top d-flex flex-wrap gap-3">
+						<div class="data-item"><div class="data-value temp-value"><i class="bi bi-thermometer-half me-1"></i>{{ sm.temperature !== undefined ? sm.temperature.toFixed(1) : '--.-' }}°C</div></div>
+						<div class="data-item"><div class="data-value humidity-value"><i class="bi bi-droplet-half me-1"></i>{{ sm.humidity !== undefined ? sm.humidity.toFixed(1) : '--.-' }}%</div></div>
+						<div class="data-item" *ngIf="sm.timeLeftDryingSeconds!=null"><div class="data-value time-left-value" title="Remaining drying time"><i class="bi bi-clock me-1"></i>{{ formatTimeLeft(sm.timeLeftDryingSeconds) }}</div></div>
+					</div>
+					<div class="row-bottom d-flex flex-wrap gap-3 mt-1">
+						<div class="data-item" *ngIf="sm.heaterOn !== undefined"><div class="data-value d-flex align-items-center" [class.text-danger]="sm.heaterOn" [class.text-muted]="!sm.heaterOn"><i class="bi bi-fire me-1" [ngClass]="sm.heaterOn ? 'bi-fire' : 'bi-fire text-muted'"></i><span>{{ sm.heaterOn ? 'ON' : 'OFF' }}</span></div></div>
+						<div class="data-item" *ngIf="sm.servoOpen !== undefined"><div class="data-value d-flex align-items-center" [class.text-primary]="sm.servoOpen" [class.text-muted]="!sm.servoOpen"><i class="bi me-1" [ngClass]="sm.servoOpen ? 'bi-door-open' : 'bi-door-closed'"></i><span>{{ sm.servoOpen ? 'OPEN' : 'CLOSED' }}</span></div></div>
+					</div>
 				</div>
-			</div>
-			<div class="controls d-flex gap-2">
+				<div class="controls d-flex gap-2">
 					<button class="btn btn-primary btn-sm" [disabled]="!selectedPresetId || starting" (click)="onStart()">
 						<span *ngIf="!starting">Start</span>
 						<span *ngIf="starting" class="spinner-border spinner-border-sm"></span>
 					</button>
 					<button class="btn btn-danger btn-sm" [disabled]="!summary || summary.status==='pending'" (click)="onStop()">Stop</button>
+				</div>
+			</div>
+			<ng-template #loadingSummary>
+				<div class="text-muted small">Loading summary...</div>
+			</ng-template>
+			<!-- Loading overlay for status card -->
+			<div *ngIf="connectionStatus === 'reconnecting'" class="card-loading-overlay">
+				<div class="spinner-border spinner-border-sm text-primary" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
 			</div>
 		</div>
-			<ng-template #loadingSummary>
-				<div class="card status-card p-3 text-muted small">Loading summary...</div>
-			</ng-template>
 
 		<!-- Presets List Card -->
-				<div class="card presets-card p-3">
-					<div class="d-flex justify-content-between align-items-center mb-2">
-						<h3 class="m-0 fs-5">Presets</h3>
-					</div>
-					<div class="presets-buttons" *ngIf="filteredPresets.length>0; else noPresets">
-						<button type="button" class="btn btn-sm preset-btn"
-							*ngFor="let p of filteredPresets"
-							(click)="onSelectPreset(p)"
-							[class.selected]="selectedPresetId===p.id">
-							{{ p.name }}
-						</button>
-					</div>
-					<ng-template #noPresets><div class="text-muted small">(no presets)</div></ng-template>
+		<div class="card presets-card p-3" style="position: relative;">
+			<div class="d-flex justify-content-between align-items-center mb-2">
+				<h3 class="m-0 fs-5">Presets</h3>
+			</div>
+			<div class="presets-buttons" *ngIf="filteredPresets.length>0; else noPresets">
+				<button type="button" class="btn btn-sm preset-btn"
+					*ngFor="let p of filteredPresets"
+					(click)="onSelectPreset(p)"
+					[class.selected]="selectedPresetId===p.id">
+					{{ p.name }}
+				</button>
+			</div>
+			<ng-template #noPresets><div class="text-muted small">(no presets)</div></ng-template>
+			<!-- Loading overlay for presets card -->
+			<div *ngIf="connectionStatus === 'reconnecting'" class="card-loading-overlay">
+				<div class="spinner-border spinner-border-sm text-primary" role="status">
+					<span class="visually-hidden">Loading...</span>
 				</div>
+			</div>
+		</div>
 	</div>
 
 	<!-- Chart Card -->
@@ -64,7 +78,18 @@
 					class="btn btn-outline-secondary" [class.active]="timeRange===r.key">{{ r.label }}</button>
 			</div>
 		</div>
-		<div id="singleDryerChart" style="width:100%; height:550px;"></div>
+		<div class="chart-container">
+			<div id="singleDryerChart" style="width:100%; height:550px;"></div>
+			<!-- Loading overlay -->
+			<div *ngIf="connectionStatus === 'reconnecting'" class="chart-loading-overlay">
+				<div class="spinner-container">
+					<div class="spinner-border text-primary" role="status">
+						<span class="visually-hidden">Loading...</span>
+					</div>
+					<div class="loading-text mt-2">Loading data...</div>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<!-- G-code Macros Card -->

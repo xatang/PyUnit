@@ -15,6 +15,17 @@
 		</div>
 	</div>
 	<div class="embed-content">
-		<div id="embedChart" class="chart-wrapper"></div>
+		<div style="position: relative;">
+			<div id="embedChart" class="chart-wrapper"></div>
+			<!-- Loading overlay -->
+			<div *ngIf="connectionStatus === 'reconnecting'" class="chart-loading-overlay">
+				<div class="spinner-container">
+					<div class="spinner-border text-primary" role="status">
+						<span class="visually-hidden">Loading...</span>
+					</div>
+					<div class="loading-text mt-2">Loading data...</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>

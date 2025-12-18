@@ -5,6 +5,9 @@ import { LoggingService } from '../../services/logging.service';
 import { environment } from '../../../environments';
 import { BehaviorSubject, Observable, Subscription, timer } from 'rxjs';
 
+// WebSocket connection mode
+export type WebSocketMode = 'all' | 'single';
+
 // Backend DryerShort (from /api/common/units)
 export interface DryerShort {
   id: number;
@@ -69,6 +72,9 @@ interface InternalState {
   dryers: DryerShort[];
   summaries: Map<number, DryerStateSummary>;
   timeRange: TimeRangeKey;
+  wsMode: WebSocketMode;  // 'all' or 'single'
+  activeDryerId?: number; // for single mode
+  logLimit?: number;      // saved limit for reconnections
 }
 
 @Injectable({ providedIn: 'root' })
@@ -85,13 +91,14 @@ export class DashboardService implements OnDestroy {
   private state: InternalState = {
     dryers: [],
     summaries: new Map<number, DryerStateSummary>(),
-    timeRange: '1h'
+    timeRange: '1h',
+    wsMode: 'all' // default to legacy mode for backward compatibility
   };
 
   private dryers$ = new BehaviorSubject<DryerShort[]>([]);
   private summaries$ = new BehaviorSubject<DryerStateSummary[]>([]);
   private timeRange$ = new BehaviorSubject<TimeRangeKey>('1h');
-  private connectionStatus$ = new BehaviorSubject<'connecting' | 'open' | 'closed' | 'error'>('closed');
+  private connectionStatus$ = new BehaviorSubject<'connecting' | 'reconnecting' | 'open' | 'closed' | 'error'>('closed');
   // Throttling for summaries emission
   private summariesDirty = false;
   private summariesThrottleTimer?: any;
@@ -107,41 +114,103 @@ export class DashboardService implements OnDestroy {
   private readonly INITIAL_UNITS_MAX_ATTEMPTS = 5;
   private initialUnitsRetryTimer?: any;
 
-  /** Explicitly initiate data + websocket connection. Safe to call multiple times. */
-  connect() {
+  /** Explicitly initiate data + websocket connection. Safe to call multiple times.
+   *
+   * @param mode 'all' = legacy endpoint (all dryers), 'single' = optimized per-dryer endpoint
+   * @param dryerId Required when mode='single', specifies which dryer to monitor
+   * @param logLimit Max historical logs to load (optional, no default). Only for single mode.
+   */
+  async connect(mode: WebSocketMode = 'all', dryerId?: number, logLimit?: number) {
     if (this.shouldReconnect && this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
-      return; // already connecting/connected
+      // Check if mode/dryer changed - reconnect if so
+      if (mode !== this.state.wsMode || (mode === 'single' && dryerId !== this.state.activeDryerId)) {
+        this.logger.info('DashboardSvc', 'connect() mode/dryer changed, reconnecting', { mode, dryerId });
+        await this.disconnect();
+      } else {
+        return; // already connecting/connected with same params
+      }
     }
+
+    // Validate single mode requires dryerId
+    if (mode === 'single' && !dryerId) {
+      this.logger.error('DashboardSvc', 'connect() single mode requires dryerId');
+      return;
+    }
+
     // Full reset to avoid duplicated historical data when returning to page
     this.state.dryers = [];
     this.state.summaries.clear();
+    this.state.wsMode = mode;
+    this.state.activeDryerId = dryerId;
+    this.state.logLimit = logLimit; // Save limit for reconnections
     this.pushSummaries(); // emit empty to allow UI to clear instantly
 
     this.shouldReconnect = true;
     this.reconnectAttempts = 0;
     this.connectionStatus$.next('connecting');
-  this.logger.info('DashboardSvc', 'connect(): fetching units...');
-  this.fetchDryers(false, true); // treat as initial fetch with retry support
+    this.logger.info('DashboardSvc', 'connect()', { mode, dryerId, logLimit: logLimit || 'none' });
+    this.fetchDryers(false, true); // treat as initial fetch with retry support
     this.fetchPresets();
-    this.openWebSocket();
+    this.openWebSocket(logLimit);
     this.startUnitsRefreshTimer();
   }
 
   /** Stop websocket + timers and prevent automatic reconnection until connect() called again. */
-  disconnect() {
-    this.shouldReconnect = false;
-    this.clearReconnectTimeout();
-    this.clearUnitsRefreshTimer();
-    try { this.ws?.close(); } catch {}
-    this.ws = undefined;
-    this.connectionStatus$.next('closed');
+  disconnect(clearData = true): Promise<void> {
+    return new Promise((resolve) => {
+      this.shouldReconnect = false;
+      this.clearReconnectTimeout();
+      this.clearUnitsRefreshTimer();
+
+      // Optionally clear summaries to prevent mixing old and new data
+      // When just changing time range, we keep data to avoid visual jump
+      if (clearData) {
+        this.state.summaries.clear();
+        this.pushSummaries();
+      }
+
+      if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+        // Save reference to current WebSocket to avoid race conditions
+        const wsToClose = this.ws;
+        this.ws = undefined; // Immediately clear to prevent new messages
+
+        // Wait for WebSocket to actually close
+        const closeHandler = () => {
+          this.connectionStatus$.next('closed');
+          resolve();
+        };
+
+        // Set a timeout in case close doesn't fire
+        const timeout = setTimeout(() => {
+          this.connectionStatus$.next('closed');
+          resolve();
+        }, 1000);
+
+        wsToClose.onclose = () => {
+          clearTimeout(timeout);
+          closeHandler();
+        };
+
+        // Clear other handlers to prevent unexpected calls
+        wsToClose.onmessage = null;
+        wsToClose.onerror = null;
+        wsToClose.onopen = null;
+
+        try { wsToClose.close(); } catch {}
+      } else {
+        // Already closed or no connection
+        this.ws = undefined;
+        this.connectionStatus$.next('closed');
+        resolve();
+      }
+    });
   }
 
   // Public observables
   getDryers(): Observable<DryerShort[]> { return this.dryers$.asObservable(); }
   getSummaries(): Observable<DryerStateSummary[]> { return this.summaries$.asObservable(); }
   getTimeRange(): Observable<TimeRangeKey> { return this.timeRange$.asObservable(); }
-  getConnectionStatus(): Observable<'connecting' | 'open' | 'closed' | 'error'> { return this.connectionStatus$.asObservable(); }
+  getConnectionStatus(): Observable<'connecting' | 'reconnecting' | 'open' | 'closed' | 'error'> { return this.connectionStatus$.asObservable(); }
   getPresets(): Observable<PresetShort[]> { return this.presets$.asObservable(); }
 
   /** Stop (cancel preset) for a dryer: POST /dashboard/control/set-preset/{id} without preset id */
@@ -192,11 +261,34 @@ export class DashboardService implements OnDestroy {
     } catch (err: any) { throw err; }
   }
 
-  setTimeRange(range: TimeRangeKey) {
+  async setTimeRange(range: TimeRangeKey) {
+    const oldRange = this.state.timeRange;
     this.state.timeRange = range;
     this.timeRange$.next(range);
-    // Immediate push on range change (no throttle) for responsive UX
-    this.flushSummaries();
+
+    // Reconnect with new time filter for both single and all modes
+    if (oldRange !== range && this.shouldReconnect) {
+      this.logger.info('DashboardSvc', 'setTimeRange reconnecting', {
+        mode: this.state.wsMode,
+        oldRange,
+        newRange: range
+      });
+      // Show reconnecting state for smooth UX
+      this.connectionStatus$.next('reconnecting');
+      // Wait for disconnect to complete before reconnecting
+      // Don't clear data to avoid visual jump - new history will replace it
+      await this.disconnect(false);
+
+      // Reconnect with appropriate mode
+      if (this.state.wsMode === 'single') {
+        await this.connect('single', this.state.activeDryerId, this.state.logLimit);
+      } else {
+        await this.connect('all', undefined, this.state.logLimit);
+      }
+    } else if (!this.shouldReconnect) {
+      // If not connected, just update local filtering
+      this.flushSummaries();
+    }
   }
 
   private async fetchDryers(silent = false, isInitial = false) {
@@ -286,9 +378,51 @@ export class DashboardService implements OnDestroy {
     }
   }
 
-  private openWebSocket() {
+  private openWebSocket(logLimit?: number) {
     if (!this.shouldReconnect) return; // guard
-    const url = `${environment.wsUrl}/dashboard/dryers`.replace('http', 'ws');
+
+    let url: string;
+    const timeRange = this.state.timeRange;
+    let startTime: string | undefined;
+
+    // Calculate start_time based on current timeRange (for both single and all modes)
+    if (timeRange !== 'all') {
+      const windowMs = TIME_RANGE_WINDOWS_MS[timeRange];
+      const startDate = new Date(Date.now() - windowMs);
+      startTime = startDate.toISOString();
+    }
+
+    if (this.state.wsMode === 'single' && this.state.activeDryerId) {
+      // Optimized endpoint: single dryer with time-based filtering
+      const baseUrl = `${environment.wsUrl}/dashboard/dryer/${this.state.activeDryerId}`.replace('http', 'ws');
+      const params = new URLSearchParams();
+      if (startTime) params.set('start_time', startTime);
+      if (logLimit !== undefined) params.set('limit', logLimit.toString());
+
+      url = `${baseUrl}?${params.toString()}`;
+      this.logger.info('DashboardSvc', 'openWebSocket single mode', {
+        dryerId: this.state.activeDryerId,
+        timeRange,
+        startTime,
+        limit: logLimit
+      });
+    } else {
+      // All dryers mode: now also supports time filtering for performance
+      const baseUrl = `${environment.wsUrl}/dashboard/dryers`.replace('http', 'ws');
+      const params = new URLSearchParams();
+      if (startTime) params.set('start_time', startTime);
+      if (logLimit !== undefined) params.set('limit', logLimit.toString());
+
+      const queryString = params.toString();
+      url = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+      this.logger.info('DashboardSvc', 'openWebSocket all mode', {
+        timeRange,
+        startTime,
+        limit: logLimit
+      });
+    }
+
     this.connectionStatus$.next('connecting');
     this.ws = new WebSocket(url);
 
@@ -339,7 +473,7 @@ export class DashboardService implements OnDestroy {
     this.clearReconnectTimeout();
     this.logger.warn('DashboardSvc', 'scheduleReconnect', { attempt: this.reconnectAttempts, delay });
     this.reconnectTimeout = setTimeout(() => {
-      if (!this.lifecycleDestroyed && this.shouldReconnect) this.openWebSocket();
+      if (!this.lifecycleDestroyed && this.shouldReconnect) this.openWebSocket(); // uses saved state.wsMode and state.activeDryerId
     }, delay);
   }
 
@@ -371,6 +505,18 @@ export class DashboardService implements OnDestroy {
     const now = Date.now();
     // Track which summaries became unsorted (out-of-order timestamps) to re-sort once.
     const unsortedSummaries = new Set<number>();
+
+    // If this is history (initial load), clear old logs for the dryers in this batch
+    // to avoid mixing old time range data with new time range data
+    if (isHistory && logs.length > 0) {
+      const dryerIdsInBatch = new Set(logs.map(l => l.dryer_id));
+      dryerIdsInBatch.forEach(dryerId => {
+        const summary = this.state.summaries.get(dryerId);
+        if (summary) {
+          summary.logs = []; // Clear old logs when new history arrives
+        }
+      });
+    }
 
     logs.forEach(raw => {
       // Normalize timestamp to local epoch
