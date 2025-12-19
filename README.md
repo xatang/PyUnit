@@ -22,7 +22,7 @@ PyUnit is a custom firmware for [iDryer Unit](https://github.com/pavluchenkor/iD
 - 🔗 **WebSocket real-time updates**
 - 📋 **Embed pages** for Klipper HTTP camera integration
 - 🤖 **G-code macro generation** for Klipper
-- 🐳 **Multi-platform Docker images** (amd64, arm64)
+- 🐳 **Multi-platform Docker images** (amd64, arm64, arm/v7, arm/v8)
 
 ## � Screenshots
 
@@ -67,7 +67,11 @@ The script will automatically:
 ### Requirements
 
 - **OS:** Linux (Ubuntu, Debian, Raspbian, Armbian)
-- **Architecture:** amd64 (x86_64) or arm64 (aarch64)
+- **Architecture:** 
+  - amd64 (x86_64) - Intel/AMD 64-bit
+  - arm64 (aarch64) - ARM 64-bit
+  - arm/v7 - ARMv7 32-bit
+  - arm/v8 - ARMv8 32-bit
 - **RAM:** 256MB minimum (512MB recommended)
 - **Disk:** ~1GB for Docker image
 
