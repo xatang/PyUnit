@@ -25,7 +25,7 @@ from api.database import get_db
 from api.cruds.dryer_crud import dryer_crud
 from simple_pid import PID
 from collections import deque
-import numpy as np
+import statistics
 from datetime import datetime
 import json
 from api.cruds.preset_crud import preset_crud
@@ -445,7 +445,7 @@ class Temperature_and_humidity_control(object):
 
         def update(self, new_value):
             self.window.append(new_value)
-            median_value = np.median(self.window)
+            median_value = statistics.median(self.window)
             return median_value
 
 class Heater_PID(object):
