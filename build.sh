@@ -63,12 +63,12 @@ echo ""
 
 # Build image for multiple platforms
 echo "========================================="
-echo "Building Docker image for AMD64 and ARM64..."
+echo "Building Docker image for multiple platforms..."
 echo "========================================="
 echo ""
 
 docker buildx build \
-    --platform linux/amd64,linux/arm64 \
+    --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8 \
     -t ${DOCKER_IMAGE}:${VERSION} \
     --push \
     .
@@ -92,7 +92,9 @@ echo "  https://hub.docker.com/r/${DOCKER_USERNAME}/pyunit"
 echo ""
 echo "Image supports:"
 echo "  - linux/amd64 (x86_64)"
-echo "  - linux/arm64 (Orange Pi, Raspberry Pi)"
+echo "  - linux/arm64 (ARM 64-bit)"
+echo "  - linux/arm/v7 (ARMv7 32-bit)"
+echo "  - linux/arm/v8 (ARMv8 32-bit)"
 echo ""
 echo "Users can install with:"
 echo "  ./install.sh"
