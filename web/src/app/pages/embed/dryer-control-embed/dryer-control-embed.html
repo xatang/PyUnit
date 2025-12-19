@@ -84,6 +84,10 @@
 	</div>
 
 	<div class="embed-content" *ngIf="!summary">
-		<div class="text-muted text-center">Loading...</div>
+		<div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+			<div class="spinner-border text-primary" role="status">
+				<span class="visually-hidden">Loading...</span>
+			</div>
+		</div>
 	</div>
 </div>

@@ -140,7 +140,29 @@
   }
 }
 
-/* Chart loading overlay */
+/* Initial chart loading (when no data) - solid background, spinner only */
+.chart-initial-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1a1d23 0%, #2a2d33 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: clamp(6px, 1vw, 10px);
+  animation: fadeIn 0.2s ease-in;
+
+  .spinner-border {
+    width: clamp(2.5rem, 5vw, 3rem);
+    height: clamp(2.5rem, 5vw, 3rem);
+    border-width: clamp(0.25rem, 0.5vw, 0.35rem);
+  }
+}
+
+/* Chart loading overlay for reconnecting state (when has data) - transparent with blur */
 .chart-loading-overlay {
   position: absolute;
   top: 0;

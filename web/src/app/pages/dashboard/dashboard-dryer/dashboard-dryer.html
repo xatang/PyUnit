@@ -36,7 +36,11 @@
 				</div>
 			</div>
 			<ng-template #loadingSummary>
-				<div class="text-muted small">Loading summary...</div>
+				<div class="d-flex justify-content-center align-items-center" style="min-height: 100px;">
+					<div class="spinner-border text-primary" role="status">
+						<span class="visually-hidden">Loading...</span>
+					</div>
+				</div>
 			</ng-template>
 			<!-- Loading overlay for status card -->
 			<div *ngIf="connectionStatus === 'reconnecting'" class="card-loading-overlay">
@@ -79,9 +83,18 @@
 			</div>
 		</div>
 		<div class="chart-container">
-			<div id="singleDryerChart" style="width:100%; height:550px;"></div>
-			<!-- Loading overlay -->
-			<div *ngIf="connectionStatus === 'reconnecting'" class="chart-loading-overlay">
+			<div id="singleDryerChart" style="width:100%; height:550px;" 
+			     [class.chart-hidden]="!summary || !logs || logs.length === 0 || connectionStatus === 'reconnecting'"></div>
+
+			<!-- Initial loading state (no data yet) -->
+			<div *ngIf="!summary || !logs || logs.length === 0" class="chart-initial-loading">
+				<div class="spinner-border text-primary" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+			</div>
+
+			<!-- Reconnecting overlay (already has data) -->
+			<div *ngIf="connectionStatus === 'reconnecting' && logs && logs.length > 0" class="chart-loading-overlay">
 				<div class="spinner-container">
 					<div class="spinner-border text-primary" role="status">
 						<span class="visually-hidden">Loading...</span>

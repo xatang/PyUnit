@@ -154,7 +154,28 @@
 	}
 }
 
-/* Chart loading overlay */
+/* Initial chart loading (no data yet) - full spinner without blur */
+.chart-initial-loading {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: var(--card-bg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+	border-radius: 8px;
+
+	.spinner-border {
+		width: 3rem;
+		height: 3rem;
+		border-width: 0.3rem;
+	}
+}
+
+/* Chart loading overlay (reconnecting with existing data) */
 .chart-loading-overlay {
 	position: absolute;
 	top: 0;
