@@ -82,6 +82,27 @@ cd PyUnit
 
 Updates preserve your configuration and IP settings automatically.
 
+### Uninstallation
+
+To completely remove PyUnit (container, volumes, images, network):
+
+```bash
+cd PyUnit
+chmod +x uninstall.sh
+./uninstall.sh
+```
+
+This will remove:
+- Docker container `pyunit`
+- Docker volume `pyunit_pyunit_data` (all data will be lost!)
+- Docker network `pyunit_pyunit_network`
+- Docker images `xatang/pyunit:*`
+
+**Note:** Local files (pyunit.db, logs) are NOT deleted automatically. To remove them:
+```bash
+rm -f pyunit.db pyunit.db-wal pyunit.db-shm app.log dryer.log
+```
+
 ## 🏗️ Architecture
 
 ### Backend (FastAPI + Python 3.11)
