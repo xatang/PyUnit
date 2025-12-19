@@ -83,8 +83,7 @@
 			</div>
 		</div>
 		<div class="chart-container">
-			<div id="singleDryerChart" style="width:100%; height:550px;" 
-			     [class.chart-hidden]="!summary || !logs || logs.length === 0 || connectionStatus === 'reconnecting'"></div>
+			<div id="singleDryerChart" style="width:100%; height:550px;"></div>
 
 			<!-- Initial loading state (no data yet) -->
 			<div *ngIf="!summary || !logs || logs.length === 0" class="chart-initial-loading">
