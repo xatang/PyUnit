@@ -160,11 +160,50 @@ class DryerCRUD:
         await db.refresh(db_log)
         return schema.DryerLog.from_orm(db_log) if db_log else None
 
-    async def get_logs(self, db: AsyncSession) -> list[models.DryerLogs]:
-        """Return all dryer logs (no filtering)."""
-        result = await db.execute(select(models.DryerLogs))
+    async def get_logs(self, db: AsyncSession, dryer_id: Optional[int] = None, 
+                       start_time: Optional[str] = None, end_time: Optional[str] = None,
+                       limit: Optional[int] = None) -> list[models.DryerLogs]:
+        """Return dryer logs with optional filtering.
+        
+        Args:
+            db: Database session
+            dryer_id: Filter by specific dryer (None = all dryers)
+            start_time: ISO format datetime string for filtering logs after this time
+            end_time: ISO format datetime string for filtering logs before this time
+            limit: Maximum number of logs to return (most recent first)
+        """
+        query = select(models.DryerLogs)
+        
+        if dryer_id is not None:
+            query = query.where(models.DryerLogs.dryer_id == dryer_id)
+            
+        if start_time:
+            from datetime import datetime
+            start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+            query = query.where(models.DryerLogs.timestamp >= start_dt)
+            
+        if end_time:
+            from datetime import datetime
+            end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+            query = query.where(models.DryerLogs.timestamp <= end_dt)
+        
+        # Order by timestamp descending (most recent first)
+        query = query.order_by(models.DryerLogs.timestamp.desc())
+        
+        if limit:
+            query = query.limit(limit)
+            
+        result = await db.execute(query)
         db_logs = result.scalars().all()
-        return [schema.DryerLog.from_orm(log) for log in db_logs] if db_logs else None
+        
+        # Return in chronological order (oldest first) for historical data
+        logs_list = [schema.DryerLog.from_orm(log) for log in reversed(db_logs)] if db_logs else []
+        
+        if dryer_id:
+            logger.debug("get_logs dryer_id=%s start=%s end=%s limit=%s returned=%d", 
+                        dryer_id, start_time, end_time, limit, len(logs_list))
+        
+        return logs_list
 
 
 dryer_crud = DryerCRUD()

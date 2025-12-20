@@ -100,6 +100,10 @@ export class DashboardChartsPage implements OnInit, OnDestroy {
     { key: '12h', label: '12h' },
     { key: 'all', label: 'All' },
   ];
+  connectionStatus: 'connecting' | 'open' | 'reconnecting' | 'closed' | 'error' = 'connecting';
+  summaries: DryerStateSummary[] = [];
+  hasChartData = false; // Track if chart has been populated with data
+  isLoadingNewData = false; // Track when user changes time range
 
   constructor(private dashboard: DashboardService, private logger: LoggingService) {}
 
@@ -107,9 +111,15 @@ export class DashboardChartsPage implements OnInit, OnDestroy {
     this.logger.debug('DashboardCharts', 'ngOnInit');
     this.initChart();
     this.subs.push(
+      this.dashboard.getConnectionStatus().subscribe(status => {
+        this.logger.debug('DashboardCharts', 'connection status', { status });
+        this.connectionStatus = status;
+      }),
       this.dashboard.getSummaries().subscribe(sums => {
         this.logger.debug('DashboardCharts', 'summaries update', { count: sums.length });
+        this.summaries = sums;
         this.updateSeries(sums);
+        // Don't stop loading indicator here - let updateSeries handle it
       }),
       this.dashboard.getTimeRange().subscribe(r => {
         this.logger.debug('DashboardCharts', 'time range changed', { from: this.timeRange, to: r });
@@ -279,9 +289,17 @@ export class DashboardChartsPage implements OnInit, OnDestroy {
     this.chart.redraw();
     const dt = (performance.now() - t0).toFixed(1);
     this.logger.debug('DashboardCharts', 'updateSeries complete', { totalPoints, series: this.chart.series.length, dt });
-    if (this.firstData && summaries.length) {
+
+    // Only mark as having data if we actually rendered something
+    if (this.firstData && summaries.length > 0 && totalPoints > 0) {
       // Disable animation for subsequent incremental updates
       this.firstData = false;
+      this.hasChartData = true; // Mark that chart has been populated with data
+    }
+
+    // Stop loading indicator after successful render with data
+    if (summaries.length > 0 && totalPoints > 0) {
+      this.isLoadingNewData = false;
     }
   }
 
@@ -292,6 +310,7 @@ export class DashboardChartsPage implements OnInit, OnDestroy {
   setRange(r: TimeRangeKey) {
     if (r === this.timeRange) return;
     this.logger.info('DashboardCharts', 'user setRange', { to: r });
+    this.isLoadingNewData = true; // Show loading immediately
     this.timeRange = r;
     this.dashboard.setTimeRange(r);
   }

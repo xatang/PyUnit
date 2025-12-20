@@ -11,6 +11,7 @@ Seeding is idempotent; defaults only inserted when tables are empty.
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text, event
 from api.models import Base, Preset, MoonrakerConfig
 import subprocess
 from api.logger import get_logger
@@ -25,8 +26,35 @@ db_logger = get_logger("database")
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
-    future=True
+    future=True,
+    connect_args={
+        "timeout": 30,  # Increase timeout for lock acquisition (default is 5)
+        "check_same_thread": False  # Allow multi-threaded access
+    },
+    pool_pre_ping=True,  # Verify connections before use
+    pool_size=10,  # Increase connection pool size
+    max_overflow=20  # Allow more overflow connections
 )
+
+# Configure SQLite PRAGMA settings for each connection
+@event.listens_for(engine.sync_engine, "connect")
+def set_sqlite_pragma(dbapi_conn, connection_record):
+    """Apply SQLite optimizations on each new connection.
+    
+    Critical for Orange Pi / SD card deployments:
+    - WAL mode: allows concurrent reads during writes
+    - synchronous=NORMAL: safe with WAL, much faster on slow storage
+    - cache_size: reduces SD card access
+    - temp_store: keeps temp data in RAM
+    """
+    cursor = dbapi_conn.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA busy_timeout=30000")  # 30 second timeout
+    cursor.execute("PRAGMA synchronous=NORMAL")  # Trade durability for speed (safe with WAL)
+    cursor.execute("PRAGMA cache_size=-64000")  # 64MB cache (negative = KB)
+    cursor.execute("PRAGMA temp_store=MEMORY")  # Keep temp tables in RAM
+    cursor.close()
+    db_logger.debug("SQLite PRAGMAs applied to new connection")
 
 # Reduce SQLAlchemy internal logger verbosity
 for _name in [
@@ -91,7 +119,10 @@ def run_migrations():
 
 
 async def init_db():
-    """Create tables based on current SQLAlchemy metadata (non-destructive)."""
+    """Create tables based on current SQLAlchemy metadata (non-destructive).
+    
+    Note: PRAGMA settings are now applied automatically via engine.connect event.
+    """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     db_logger.info("Database schema ensured (create_all)")

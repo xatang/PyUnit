@@ -8,6 +8,23 @@
 	</div>
   </div>
   <div class="chart-container">
-    <div id="dryersHighchart" class="highchart-root"></div>
+    <div id="dryersHighchart" class="highchart-root" [class.chart-hidden]="!hasChartData || isLoadingNewData"></div>
+
+    <!-- Initial loading spinner (when no data) -->
+    <div *ngIf="!hasChartData" class="chart-initial-loading">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Loading overlay for reconnecting state (when has data) -->
+    <div *ngIf="isLoadingNewData && hasChartData" class="chart-loading-overlay">
+      <div class="spinner-container">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="loading-text">Loading data...</div>
+      </div>
+    </div>
   </div>
 </div>

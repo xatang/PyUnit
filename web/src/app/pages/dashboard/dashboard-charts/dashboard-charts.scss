@@ -1,6 +1,73 @@
-.chart-container { padding: 0.5rem 1rem 1rem; min-height:550px; display:flex; }
+.chart-container { padding: 0.5rem 1rem 1rem; min-height:550px; display:flex; position: relative; }
 .highchart-root { width: 100%; height: 100%; min-height:550px; opacity:0; transform:translateY(6px); animation: chartFade .6s ease forwards .15s; }
+.highchart-root.chart-hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none;
+  animation: none !important; /* Disable animation when hidden */
+}
 @keyframes chartFade { to { opacity:1; transform:translateY(0); } }
+
+/* Initial chart loading (when no data) - solid background, spinner only */
+.chart-initial-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #212529; /* Explicit dark background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  border-radius: 8px;
+  animation: fadeIn 0.2s ease-in;
+
+  .spinner-border {
+    width: 4rem;
+    height: 4rem;
+    border-width: 0.4rem;
+  }
+}
+
+/* Chart loading overlay for reconnecting state (when has data) - transparent with blur */
+.chart-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(33, 37, 41, 0.85);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  border-radius: 8px;
+  animation: fadeIn 0.2s ease-in;
+
+  .spinner-container {
+    text-align: center;
+
+    .spinner-border {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+
+    .loading-text {
+      margin-top: 0.75rem;
+      color: #f0f0f2;
+      font-size: 0.95rem;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .card { background: #212529; border: 1px solid #2c3237; border-radius: 10px; min-height:550px; display:flex; flex-direction:column; }
 .card-header { border-bottom: 1px solid #2c3237; padding: .75rem 1rem; }
 .card-title { font-size: 1.1rem; margin: 0; }

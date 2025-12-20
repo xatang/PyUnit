@@ -22,9 +22,9 @@ PyUnit is a custom firmware for [iDryer Unit](https://github.com/pavluchenkor/iD
 - 🔗 **WebSocket real-time updates**
 - 📋 **Embed pages** for Klipper HTTP camera integration
 - 🤖 **G-code macro generation** for Klipper
-- 🐳 **Multi-platform Docker images** (amd64, arm64)
+- 🐳 **Multi-platform Docker images** (amd64, arm64, arm/v7, arm/v8)
 
-## � Screenshots
+## 📸 Screenshots
 
 ### Dashboard Overview
 ![Dashboard](images/dashboard.png)
@@ -42,7 +42,7 @@ PyUnit is a custom firmware for [iDryer Unit](https://github.com/pavluchenkor/iD
 ![Fluidd Integration](images/fluidd-integration.png)
 *PyUnit embedded control panel in Fluidd/Mainsail interface*
 
-## � Quick Start
+## 🚀 Quick Start
 
 ### One-Command Installation
 
@@ -67,9 +67,20 @@ The script will automatically:
 ### Requirements
 
 - **OS:** Linux (Ubuntu, Debian, Raspbian, Armbian)
-- **Architecture:** amd64 (x86_64) or arm64 (aarch64)
+- **Architecture:** 
+  - amd64 (x86_64) - Intel/AMD 64-bit
+  - arm64 (aarch64) - ARM 64-bit
+  - arm/v7 - ARMv7 32-bit
+  - arm/v8 - ARMv8 32-bit
 - **RAM:** 256MB minimum (512MB recommended)
 - **Disk:** ~1GB for Docker image
+
+#### Additionally, you can add the following commands to the Fluidd or Mainsail console filters to avoid a flood of messages during firmware operation.
+```bash
+SET_LED LED=[led_name] INDEX=
+SET_HEATER_TEMPERATURE HEATER=[heater_name]
+SET_SERVO SERVO=[servo_name]
+```
 
 ### Updates
 
@@ -80,7 +91,29 @@ cd PyUnit
 ./run.sh
 ```
 
+
 Updates preserve your configuration and IP settings automatically.
+
+### Uninstallation
+
+To completely remove PyUnit (container, volumes, images, network):
+
+```bash
+cd PyUnit
+chmod +x uninstall.sh
+./uninstall.sh
+```
+
+This will remove:
+- Docker container `pyunit`
+- Docker volume `pyunit_pyunit_data` (all data will be lost!)
+- Docker network `pyunit_pyunit_network`
+- Docker images `xatang/pyunit:*`
+
+**Note:** Local files (pyunit.db, logs) are NOT deleted automatically. To remove them:
+```bash
+rm -f pyunit.db pyunit.db-wal pyunit.db-shm app.log dryer.log
+```
 
 ## 🏗️ Architecture
 
@@ -179,7 +212,7 @@ sudo docker compose up -d
 **Starting a Drying Cycle:**
 1. Select a dryer from the list
 2. Choose a preset
-3. Click **Start** - the dryer will
+3. Click **Start** - the dryer will begin the drying process
 
 ### Configuration
 
@@ -193,12 +226,26 @@ sudo docker compose up -d
 
 ### Klipper Integration
 
+**Example Configuration:**
+
+A complete Klipper configuration example is available in `config_and_macros/U1.cfg.example`. This file contains:
+- Heater configuration (`[heater_generic]`)
+- Temperature sensor setup (`[temperature_sensor]`)
+- LED control (`[neopixel]`)
+- Servo configuration (`[servo]`)
+- G-code macros for dryer control
+
+**⚠️ Important:** All module and sensor names in Klipper configuration **must be lowercase**:
+- ✅ Correct: `idryer_u1_heater`, `idryer_u1_air`, `srv_u1`
+- ❌ Wrong: `IDryer_U1_Heater`, `IDRYER_U1_AIR`, `SRV_U1`
+
 **G-code Macros:**
-1. Go to dryer detail page
-2. Expand **Klipper G-code Macros**
-3. Configure Python script path
-4. Copy macros to `printer.cfg`
-5. Use in Klipper:
+1. To control the drying process via gcode macro, your printer must have the [gcode_shell_command](https://github.com/dw-0/kiauh/blob/master/docs/gcode_shell_command.md) extension installed.
+2. After installation gcode_shell_command go to dryer detail page
+3. Expand **Klipper G-code Macros**
+4. Configure Python script path
+5. Copy macros to `printer.cfg`
+6. Use in Klipper:
    ```gcode
    OFF_DRYER ID=1
    PRESET_DRYER ID=1 PRESET_ID=5
@@ -212,13 +259,13 @@ sudo docker compose up -d
    [camera pyunit_control]
    location: dryer
    service: http
-   target_fps: 15
+   aspect_ratio: 4:3
    stream_url: http://192.168.1.100:5000/embed/dryer/1/control
    
    [camera pyunit_chart]
    location: dryer
    service: http  
-   target_fps: 15
+   aspect_ratio: 4:3
    stream_url: http://192.168.1.100:5000/embed/dryer/1/chart
    ```
 

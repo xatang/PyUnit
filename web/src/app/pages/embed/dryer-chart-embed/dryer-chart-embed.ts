@@ -22,6 +22,7 @@ export class DryerChartEmbed implements OnInit, OnDestroy {
   dryerId!: number;
   summary?: DryerStateSummary;
   private subs: Subscription[] = [];
+  connectionStatus: string = '';
 
   // Chart related
   private chart?: Highcharts.Chart;
@@ -54,29 +55,49 @@ export class DryerChartEmbed implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.logger.info('DryerChartEmbed', 'ngOnInit');
 
-    // Ensure websocket connection
-    if (this.dashboard.getConnectionStatus && typeof this.dashboard.getConnectionStatus === 'function') {
-      const sub = this.dashboard.getConnectionStatus().subscribe(st => {
-        if (st === 'closed' || st === 'error') {
-          if (!this.initiatedConnection) {
-            try { this.dashboard.connect(); this.initiatedConnection = true; } catch {}
-          }
-        }
-      });
-      this.subs.push(sub);
-    } else {
-      try { this.dashboard.connect(); this.initiatedConnection = true; } catch {}
-    }
-
+    // Get dryer ID from route first
     this.subs.push(this.route.paramMap.subscribe(pm => {
       const val = pm.get('dryerId');
       this.dryerId = val ? +val : NaN;
+
+      // Connect in optimized 'single' mode for this specific dryer
+      if (Number.isFinite(this.dryerId) && !this.initiatedConnection) {
+        this.logger.info('DryerChartEmbed', 'Connecting in single mode', { dryerId: this.dryerId });
+        try {
+          // No limit - load all logs for time range, frontend filtering handles performance
+          this.dashboard.connect('single', this.dryerId);
+          this.initiatedConnection = true;
+        } catch (err) {
+          this.logger.error('DryerChartEmbed', 'Failed to connect', err);
+        }
+      }
+
       this.pickSummary();
     }));
+
+    // Ensure websocket connection
+    if (this.dashboard.getConnectionStatus && typeof this.dashboard.getConnectionStatus === 'function') {
+      const sub = this.dashboard.getConnectionStatus().subscribe(st => {
+        this.connectionStatus = st;
+        if ((st === 'closed' || st === 'error') && !this.initiatedConnection && Number.isFinite(this.dryerId)) {
+          try {
+            this.dashboard.connect('single', this.dryerId);
+            this.initiatedConnection = true;
+          } catch {}
+        }
+      });
+      this.subs.push(sub);
+    }
 
     this.subs.push(this.dashboard.getSummaries().subscribe(() => {
       this.pickSummary();
       this.updateChart();
+    }));
+
+    // Subscribe to time range changes (for reconnection with new data)
+    this.subs.push(this.dashboard.getTimeRange().subscribe((r: TimeRangeKey) => {
+      this.timeRange = r;
+      this.updateChart(true);
     }));
 
     // Init chart after view paint
@@ -381,8 +402,10 @@ export class DryerChartEmbed implements OnInit, OnDestroy {
 
   onRangeChange(r: TimeRangeKey) {
     if (r === this.timeRange) return;
-    this.timeRange = r;
-    this.updateChart(true);
+    this.logger.info('DryerChartEmbed', 'Time range changed', { from: this.timeRange, to: r });
+    // This will trigger reconnection in single mode with new start_time
+    this.dashboard.setTimeRange(r);
+    // timeRange will be updated via subscription to getTimeRange()
   }
 
   ngOnDestroy(): void {

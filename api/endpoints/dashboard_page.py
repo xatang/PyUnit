@@ -3,6 +3,34 @@
 Provides:
 * WebSocket streaming of dryer log history and live updates
 * Control endpoint to set a preset (or reset to pending) for a running dryer
+
+WebSocket Endpoints:
+-------------------
+1. /dashboard/dryers (DEPRECATED - loads ALL logs from ALL dryers)
+   - Use for backward compatibility only
+   - Performance issue: sends all historical data on connection
+
+2. /dashboard/dryer/{dryer_id} (RECOMMENDED - optimized for single dryer)
+   - Query parameters:
+     * start_time: ISO datetime (e.g., "2025-12-18T10:00:00Z") - filter logs after this time
+     * end_time: ISO datetime - filter logs before this time
+     * limit: max number of historical logs (optional) - limits result set if needed
+   
+   Frontend Usage Example (TypeScript):
+   -----------------------------------
+   // Connect to specific dryer with time filtering (no limit)
+   const dryerId = 1;
+   const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+   const ws = new WebSocket(
+     `ws://localhost:8000/dashboard/dryer/${dryerId}?start_time=${oneHourAgo}`
+   );
+   
+   // Or with time range (limit is optional)
+   const startTime = '2025-12-18T00:00:00Z';
+   const endTime = '2025-12-18T23:59:59Z';
+   const ws = new WebSocket(
+     `ws://localhost:8000/dashboard/dryer/${dryerId}?start_time=${startTime}&end_time=${endTime}`
+   );
 """
 
 from fastapi import APIRouter, HTTPException, Request, WebSocket, status, WebSocketDisconnect, Depends
@@ -26,27 +54,114 @@ def get_app(request: Request):
 
 
 @router.websocket("/dryers")
-async def dryers_stats_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_db)):
-    """WebSocket endpoint streaming historical and live dryer logs.
+async def dryers_stats_websocket(
+    websocket: WebSocket, 
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    limit: Optional[int] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """WebSocket endpoint streaming historical and live logs for ALL dryers.
 
-    Sends an initial history payload (if any) then keeps the connection open
-    until the client disconnects.
+    DEPRECATED: Use /dryer/{dryer_id} for better performance with single dryer pages.
+    
+    Query parameters:
+    - start_time: ISO datetime string (e.g., 2025-12-18T10:00:00Z) - logs after this time
+    - end_time: ISO datetime string - logs before this time  
+    - limit: Maximum number of historical logs to load per dryer (optional)
+
+    Sends filtered history then streams live updates for all dryers.
     """
-    logger.debug("WS /dashboard/dryers connect")
+    logger.debug("WS /dashboard/dryers connect start=%s end=%s limit=%s (deprecated - consider /dryer/{id})", 
+                 start_time, end_time, limit)
     await webSocketManager.connect(websocket, 'dryers_stats')
-    old_logs = await dryer_crud.get_logs(db)
-
+    
+    # Fetch filtered historical logs (all dryers)
     try:
+        old_logs = await dryer_crud.get_logs(
+            db,
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit
+        )
         history = {'history': [json.loads(log.json()) for log in old_logs]}
         await websocket.send_text(json.dumps(history))
+        logger.debug("WS /dashboard/dryers sent %d historical logs", len(old_logs))
     except Exception as e:  # non-fatal, continue with live stream
         logger.warning("Failed to send history over WS error=%s", e)
+    
     try:
         while True:
-            await websocket.receive_text()  # currently ignored (keep-alive / future commands)
+            try:
+                await websocket.receive_text()  # currently ignored (keep-alive / future commands)
+            except RuntimeError as e:
+                # WebSocket not connected or already closed
+                logger.debug("WS receive error (client likely disconnected): %s", e)
+                break
     except WebSocketDisconnect:
+        logger.debug("WS /dashboard/dryers disconnect (explicit)")
+    except Exception as e:
+        logger.error("WS /dashboard/dryers unexpected error: %s", e)
+    finally:
         webSocketManager.disconnect(websocket)
-        logger.debug("WS /dashboard/dryers disconnect")
+        logger.debug("WS /dashboard/dryers cleanup complete")
+
+
+@router.websocket("/dryer/{dryer_id}")
+async def dryer_stats_websocket(
+    websocket: WebSocket, 
+    dryer_id: int,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    limit: Optional[int] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """WebSocket endpoint for a SINGLE dryer with optimized log filtering.
+
+    Query parameters:
+    - start_time: ISO datetime string (e.g., 2025-12-18T10:00:00Z) - logs after this time
+    - end_time: ISO datetime string - logs before this time  
+    - limit: Maximum number of historical logs to load (optional)
+
+    Sends filtered history then streams live updates for this dryer only.
+    """
+    logger.debug("WS /dashboard/dryer/%s connect start=%s end=%s limit=%s", 
+                 dryer_id, start_time, end_time, limit)
+    
+    # Register for live updates specific to this dryer
+    await webSocketManager.connect(websocket, f'dryer_{dryer_id}_stats')
+    
+    # Fetch filtered historical logs
+    try:
+        old_logs = await dryer_crud.get_logs(
+            db, 
+            dryer_id=dryer_id,
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit
+        )
+        history = {'history': [json.loads(log.json()) for log in old_logs]}
+        await websocket.send_text(json.dumps(history))
+        logger.debug("WS /dashboard/dryer/%s sent %d historical logs", dryer_id, len(old_logs))
+    except Exception as e:
+        logger.warning("Failed to send history for dryer %s: %s", dryer_id, e)
+    
+    # Keep connection alive for live updates
+    try:
+        while True:
+            try:
+                # Client can send commands here (currently keep-alive only)
+                await websocket.receive_text()
+            except RuntimeError as e:
+                logger.debug("WS dryer/%s receive error: %s", dryer_id, e)
+                break
+    except WebSocketDisconnect:
+        logger.debug("WS /dashboard/dryer/%s disconnect (explicit)", dryer_id)
+    except Exception as e:
+        logger.error("WS /dashboard/dryer/%s unexpected error: %s", dryer_id, e)
+    finally:
+        webSocketManager.disconnect(websocket)
+        logger.debug("WS /dashboard/dryer/%s cleanup complete", dryer_id)
 
 
 @router.post("/control/set-preset/{dryer_id}")

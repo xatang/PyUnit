@@ -13,7 +13,9 @@ export class DashboardPage implements OnInit, OnDestroy {
   constructor(private dashboard: DashboardService) {}
 
   ngOnInit(): void {
-    this.dashboard.connect();
+    // Connect in 'all' mode (legacy) - shows all dryers
+    // For individual dryer pages, use connect('single', dryerId) instead
+    this.dashboard.connect('all');
   }
 
   ngOnDestroy(): void {

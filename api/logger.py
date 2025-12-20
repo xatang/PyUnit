@@ -4,17 +4,91 @@ Features:
 * Loads .env file early so LOG_LEVEL / DRYER_LOG_LEVEL are respected.
 * .env values have precedence by default (they overwrite existing env vars).
 * To preserve already set process environment variables set DOTENV_RESPECT_ENV=1.
-* Rotating file handlers for app & dryer specific logs.
+* Size-limited file handlers maintaining logs at ~4-5MB (removes old entries).
+* Auto-truncation when size exceeds 5MB, trimming to 4MB (safe for Docker bind mounts).
 * WebSocket broadcast handlers for real-time log streaming to clients.
 * Convenience `get_logger` for consistent retrieval.
 """
 
 import logging
 import os
-from logging.handlers import RotatingFileHandler
 import asyncio
 
 from api.websocket_manager import WebSocketConnectionManager, webSocketManager
+
+
+class SizeLimitedFileHandler(logging.FileHandler):
+    """FileHandler that maintains file size around maxBytes by truncating old entries.
+    
+    Unlike RotatingFileHandler, this doesn't try to rename files (which fails
+    with Docker bind mounts). Instead, it truncates old entries from the beginning
+    of the file when the limit is reached, keeping the file size stable around maxBytes.
+    """
+    def __init__(self, filename, mode='a', encoding=None, maxBytes=0, targetBytes=None):
+        """
+        Args:
+            filename: Path to log file
+            mode: File opening mode (typically 'a' for append)
+            encoding: File encoding
+            maxBytes: Maximum file size in bytes before truncation (0 = no limit)
+            targetBytes: Target size after truncation (default: maxBytes * 0.8)
+        """
+        super().__init__(filename, mode, encoding)
+        self.maxBytes = maxBytes
+        self.targetBytes = targetBytes or int(maxBytes * 0.8) if maxBytes > 0 else 0
+        self._check_counter = 0
+        
+    def emit(self, record):
+        """Emit a record, checking file size periodically and truncating if needed."""
+        try:
+            # Check file size every 100 records to avoid excessive I/O
+            self._check_counter += 1
+            if self.maxBytes > 0 and self._check_counter >= 100:
+                self._check_counter = 0
+                self.stream.flush()
+                if os.path.exists(self.baseFilename):
+                    current_size = os.path.getsize(self.baseFilename)
+                    if current_size > self.maxBytes:
+                        self._truncate_to_target()
+            super().emit(record)
+        except Exception:
+            self.handleError(record)
+            
+    def _truncate_to_target(self):
+        """Truncate file to targetBytes by removing old entries from the beginning."""
+        try:
+            self.stream.close()
+            
+            current_size = os.path.getsize(self.baseFilename)
+            bytes_to_remove = current_size - self.targetBytes
+            
+            if bytes_to_remove <= 0:
+                self.stream = self._open()
+                return
+            
+            # Read file and find position to cut
+            with open(self.baseFilename, 'r', encoding=self.encoding or 'utf-8') as f:
+                # Skip bytes_to_remove bytes, then find next newline
+                f.seek(bytes_to_remove)
+                # Read until next complete line
+                f.readline()  # Skip partial line
+                # Keep everything from here
+                remaining_content = f.read()
+            
+            # Rewrite file with remaining content
+            with open(self.baseFilename, 'w', encoding=self.encoding or 'utf-8') as f:
+                f.write(f"--- Log truncated, removed ~{bytes_to_remove} bytes of old entries ---\n")
+                f.write(remaining_content)
+            
+            # Reopen stream
+            self.stream = self._open()
+        except Exception as e:
+            # If truncation fails, just continue logging
+            print(f"Failed to truncate log file {self.baseFilename}: {e}")
+            try:
+                self.stream = self._open()
+            except:
+                pass
 
 
 def _as_bool(value: str | None) -> bool:
@@ -117,19 +191,24 @@ def setup_logging():
     file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     console_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
-    main_handler = RotatingFileHandler(
+    # Use SizeLimitedFileHandler to maintain log files around 5MB
+    # When file exceeds 5MB, old entries are removed to bring it down to ~4MB
+    # This keeps the file size stable without rotating files (Docker bind mount safe)
+    main_handler = SizeLimitedFileHandler(
         'app.log',
-        maxBytes=5 * 1024 * 1024,
-        backupCount=1,
-        encoding='utf-8'
+        mode='a',
+        encoding='utf-8',
+        maxBytes=5 * 1024 * 1024,    # 5 MB - trigger truncation
+        targetBytes=4 * 1024 * 1024  # 4 MB - target size after truncation
     )
     main_handler.setFormatter(file_formatter)
     
-    dryer_handler = RotatingFileHandler(
+    dryer_handler = SizeLimitedFileHandler(
         'dryer.log',
-        maxBytes=5 * 1024 * 1024,
-        backupCount=0,
-        encoding='utf-8'
+        mode='a',
+        encoding='utf-8',
+        maxBytes=5 * 1024 * 1024,    # 5 MB - trigger truncation
+        targetBytes=4 * 1024 * 1024  # 4 MB - target size after truncation
     )
     dryer_handler.setFormatter(file_formatter)
     

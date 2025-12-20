@@ -51,7 +51,7 @@
                         <div *ngIf="configForm.get('moonraker_ip')?.errors?.['required']">IP address is required</div>
                         <div *ngIf="configForm.get('moonraker_ip')?.errors?.['pattern']">Enter a valid IP address (e.g., 192.168.1.1)</div>
                     </div>
-                    <div class="form-text">Specify the Moonraker server IP address (e.g., 127.0.0.1 or 192.168.1.100)</div>
+                    <div class="form-text">Specify the IP address of the machine running Moonraker (e.g., 192.168.1.100). Do NOT use 127.0.0.1</div>
                 </div>
 
                 <!-- Moonraker Port -->

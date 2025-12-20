@@ -15,7 +15,7 @@ on:
 
 env:
   DOCKER_IMAGE: xatang/pyunit
-  PLATFORMS: linux/amd64,linux/arm64
+  PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8
 
 jobs:
   build-and-push:

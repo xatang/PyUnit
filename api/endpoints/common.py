@@ -67,9 +67,24 @@ async def ws_info():
         {
             "path": "/api/dashboard/dryers",
             "channel": "dryers_stats",
-            "purpose": "Historical + live dryer state updates (JSON objects)",
+            "purpose": "DEPRECATED: Historical + live dryer state updates for ALL dryers (JSON objects). Use /dashboard/dryer/{id} for better performance.",
             "client_send": "ignored (reserved for future commands)",
-            "server_send_example": {"history": [{"id": 1, "status": "DRYING"}]}
+            "server_send_example": {"history": [{"id": 1, "dryer_id": 1, "status": "drying", "temperature": 45.5}]},
+            "deprecated": True,
+            "replacement": "/api/dashboard/dryer/{dryer_id}"
+        },
+        {
+            "path": "/api/dashboard/dryer/{dryer_id}",
+            "channel": "dryer_{dryer_id}_stats",
+            "purpose": "RECOMMENDED: Optimized historical + live updates for a SINGLE dryer (JSON objects)",
+            "query_params": {
+                "start_time": "ISO datetime string (e.g., 2025-12-18T10:00:00Z) - filter logs after this time",
+                "end_time": "ISO datetime string - filter logs before this time",
+                "limit": "Maximum number of historical logs to load (default: 100, prevents memory issues)"
+            },
+            "client_send": "ignored (reserved for future commands)",
+            "server_send_example": {"history": [{"id": 1, "dryer_id": 1, "status": "drying", "temperature": 45.5, "timestamp": "2025-12-18T12:00:00Z"}]},
+            "benefits": "500x less data on connection, time-based filtering, single dryer focus"
         }
     ]
     logger.debug("GET /common/ws-info return %d channels", len(websockets))

@@ -29,11 +29,7 @@ certifi==2025.10.5
 # Web utilities
 python-multipart==0.0.12
 websockets==15.0.1
-websocket==0.2.1
 h11==0.16.0
-
-# Numeric
-numpy==2.3.3
 
 # PID control
 simple-pid==2.0.1
@@ -52,13 +48,5 @@ idna==3.10
 charset-normalizer==3.4.4
 sniffio==1.3.1
 typing_extensions==4.15.0
-typing-inspection==0.4.1
 propcache==0.3.2
 colorama==0.4.6
-
-# Gevent (if needed)
-gevent==25.8.2
-zope.event==6.0
-zope.interface==8.0
-cffi==2.0.0
-pycparser==2.23

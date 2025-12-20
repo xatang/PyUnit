@@ -39,25 +39,37 @@ export class DryerControlEmbed implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.logger.info('DryerControlEmbed', 'ngOnInit');
 
-    // Ensure websocket connection
-    if (this.dashboard.getConnectionStatus && typeof this.dashboard.getConnectionStatus === 'function') {
-      const sub = this.dashboard.getConnectionStatus().subscribe(st => {
-        if (st === 'closed' || st === 'error') {
-          if (!this.initiatedConnection) {
-            try { this.dashboard.connect(); this.initiatedConnection = true; } catch {}
-          }
-        }
-      });
-      this.subs.push(sub);
-    } else {
-      try { this.dashboard.connect(); this.initiatedConnection = true; } catch {}
-    }
-
+    // Get dryer ID from route first
     this.subs.push(this.route.paramMap.subscribe(pm => {
       const val = pm.get('dryerId');
       this.dryerId = val ? +val : NaN;
+
+      // Connect in optimized 'single' mode for this specific dryer
+      if (Number.isFinite(this.dryerId) && !this.initiatedConnection) {
+        this.logger.info('DryerControlEmbed', 'Connecting in single mode', { dryerId: this.dryerId });
+        try {
+          this.dashboard.connect('single', this.dryerId, 1); // Control only needs current state
+          this.initiatedConnection = true;
+        } catch (err) {
+          this.logger.error('DryerControlEmbed', 'Failed to connect', err);
+        }
+      }
+
       this.pickSummary();
     }));
+
+    // Ensure websocket connection
+    if (this.dashboard.getConnectionStatus && typeof this.dashboard.getConnectionStatus === 'function') {
+      const sub = this.dashboard.getConnectionStatus().subscribe(st => {
+        if ((st === 'closed' || st === 'error') && !this.initiatedConnection && Number.isFinite(this.dryerId)) {
+          try {
+            this.dashboard.connect('single', this.dryerId, 1);
+            this.initiatedConnection = true;
+          } catch {}
+        }
+      });
+      this.subs.push(sub);
+    }
 
     this.subs.push(this.dashboard.getSummaries().subscribe(() => {
       this.pickSummary();
@@ -165,7 +177,7 @@ export class DryerControlEmbed implements OnInit, OnDestroy {
   }
 
   async onStop() {
-    if (!this.summary || this.summary.status !== 'drying') return;
+    if (!this.summary || this.summary.status === 'pending') return;
     try {
       const res = await this.dashboard.stopDryer(this.dryerId);
       this.toast.show(`Stopped dryer #${this.dryerId}${res?.message ? ': ' + res.message : ''}`, {
