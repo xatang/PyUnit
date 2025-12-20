@@ -403,6 +403,8 @@ PyUnit/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── common-ui/       # Shared UI components
+│   │   │   ├── guards/          # Route guards
+│   │   │   │   └── setup.guard.ts  # Setup completion check
 │   │   │   ├── pages/
 │   │   │   │   ├── configs/     # Configuration pages
 │   │   │   │   │   ├── dryer-config/
@@ -414,9 +416,13 @@ PyUnit/
 │   │   │   │   │   ├── dryer-chart/
 │   │   │   │   │   └── dryer-control/
 │   │   │   │   ├── logs/        # Logs viewer
-│   │   │   │   └── presets/     # Preset CRUD
-│   │   │   │       ├── preset-editor/
-│   │   │   │       └── presets-list/
+│   │   │   │   ├── presets/     # Preset CRUD
+│   │   │   │   │   ├── preset-editor/
+│   │   │   │   │   └── presets-list/
+│   │   │   │   └── welcome/     # First-time setup wizard
+│   │   │   │       ├── welcome.html
+│   │   │   │       ├── welcome.scss
+│   │   │   │       └── welcome.ts
 │   │   │   ├── services/        # Angular services
 │   │   │   │   ├── dryer-config.service.ts
 │   │   │   │   ├── moonraker-config.service.ts
