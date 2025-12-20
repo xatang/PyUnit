@@ -1,0 +1,26 @@
+.container {
+  padding: 0.5rem 1rem;
+}
+
+.config-card {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.card {
+  transition: all 0.3s ease;
+
+  &.border-primary {
+    border-width: 2px;
+  }
+
+  &.border-success {
+    border-width: 2px;
+  }
+}
+
+.opacity-50 {
+  opacity: 0.5;
+  pointer-events: none;
+}

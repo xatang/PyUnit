@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastService } from '../../../services/toast';
 import { DryersService, Dryer, MoonrakerObjectsResponse } from './dryer-config.service';
 import { LoggingService } from '../../../services/logging.service';
@@ -16,6 +17,7 @@ export class DryerConfigPage implements OnInit {
   dryerForm!: FormGroup;
   dryers: Dryer[] = [];
   editingDryer: Dryer | null = null;
+  isFromWelcome = false;
 
   // Данные для выпадающих списков
   heaters: string[] = [];
@@ -33,13 +35,17 @@ export class DryerConfigPage implements OnInit {
     private dryersService: DryersService,
     private toastService: ToastService,
     private fb: FormBuilder,
-    private logger: LoggingService
+    private logger: LoggingService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.initForm();
     this.loadDryers();
     this.loadMoonrakerObjects();
+    // Check if coming from welcome page
+    this.isFromWelcome = this.route.snapshot.queryParamMap.get('from') === 'welcome';
   }
 
   initForm(): void {
@@ -262,6 +268,13 @@ export class DryerConfigPage implements OnInit {
         );
         this.resetForm();
         this.loadDryers();
+
+        // If coming from welcome page, redirect back after saving
+        if (this.isFromWelcome && !this.editingDryer) {
+          setTimeout(() => {
+            this.router.navigate(['/welcome']);
+          }, 1000);
+        }
       },
       error: (error) => {
         this.isSaving = false;
@@ -351,5 +364,9 @@ export class DryerConfigPage implements OnInit {
       }
     });
     this.editingDryer = null;
+  }
+
+  backToWelcome(): void {
+    this.router.navigate(['/welcome']);
   }
 }

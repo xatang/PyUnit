@@ -17,7 +17,7 @@ class MoonrakerMethod(str, Enum):
 class MoonrakerConfigBase(BaseModel):
     """Base parameters required to talk to a Moonraker instance."""
     moonraker_api_method: MoonrakerMethod = Field(default=MoonrakerMethod.HTTP, description="Protocol scheme")
-    moonraker_ip: str = Field(default="127.0.0.1", max_length=50, description="Moonraker host/IP")
+    moonraker_ip: str = Field(default="127.0.0.2", max_length=50, description="Moonraker host/IP")
     moonraker_port: int = Field(default=7125, ge=1, le=65535, description="Moonraker port")
     moonraker_api_key: Optional[str] = Field(None, max_length=100, description="Optional API key for auth")
 

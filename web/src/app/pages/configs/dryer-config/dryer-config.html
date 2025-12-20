@@ -324,6 +324,12 @@
 
                 <!-- Action buttons -->
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button *ngIf="isFromWelcome" type="button" class="btn btn-outline-primary me-md-2"
+                            (click)="backToWelcome()"
+                            [disabled]="isSaving">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Back to Setup
+                    </button>
                     <button type="button" class="btn btn-outline-secondary me-md-2"
                             (click)="resetForm()"
                             [disabled]="isSaving">
