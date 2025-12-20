@@ -181,6 +181,33 @@ echo ""
 echo "Starting PyUnit..."
 sudo $DC down 2>/dev/null || true
 sudo $DC pull
+
+# Clean up old unused images to free disk space
+echo ""
+echo "Cleaning up old Docker images..."
+DANGLING_IMAGES=$(sudo docker images -f "dangling=true" -q)
+if [ -n "$DANGLING_IMAGES" ]; then
+    sudo docker rmi $DANGLING_IMAGES 2>/dev/null || true
+    echo "✓ Removed dangling images"
+else
+    echo "✓ No dangling images to clean"
+fi
+
+# Optionally clean old pyunit images (keep current tag only)
+OLD_PYUNIT_IMAGES=$(sudo docker images xatang/pyunit --format "{{.Repository}}:{{.Tag}}" | grep -v "${DOCKER_TAG}" || true)
+if [ -n "$OLD_PYUNIT_IMAGES" ]; then
+    echo "Found old PyUnit images:"
+    echo "$OLD_PYUNIT_IMAGES"
+    read -p "Remove old PyUnit images? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "$OLD_PYUNIT_IMAGES" | xargs -r sudo docker rmi 2>/dev/null || true
+        echo "✓ Removed old PyUnit images"
+    else
+        echo "✓ Keeping old images"
+    fi
+fi
+
 sudo $DC up -d
 
 echo ""
