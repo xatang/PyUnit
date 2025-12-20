@@ -20,6 +20,8 @@ from api.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from api.tools.moonraker_api import Moonraker_api
 from typing import Any
+import aiohttp
+import asyncio
 
 router = APIRouter()
 logger = get_logger("config_page_endpoint")
@@ -60,18 +62,42 @@ async def update_moonraker_config(config: moonrkaerConfigSchema.MoonrakerConfigU
 
 
 @router.post("/moonraker/test-connection")
-async def test_connection_to_moonraker(db: AsyncSession = Depends(get_db)):
-    """Test connectivity to Moonraker server using stored configuration."""
-    logger.debug("POST /config/moonraker/test-connection")
-    moonraker_api = Moonraker_api(db)
-    await moonraker_api.initialize()
-    result: dict[str, Any] = await moonraker_api.get_info()
-    success = bool(result.get('success'))
-    if success:
-        logger.info("Moonraker connection successful")
-        return {"success": True, "message": "Connection successful"}
-    logger.warning("Moonraker connection failed message=%s", result.get('message'))
-    return result
+async def test_connection_to_moonraker(config: moonrkaerConfigSchema.MoonrakerConfigBase, db: AsyncSession = Depends(get_db)):
+    """Test connectivity to Moonraker server using provided configuration.
+    
+    Args:
+        config: Moonraker connection parameters to test
+        db: Database session (unused, kept for consistency)
+    
+    Returns:
+        dict with success status and message
+    """
+    logger.debug("POST /config/moonraker/test-connection ip=%s port=%s", config.moonraker_ip, config.moonraker_port)
+    
+    # Build URL from provided config
+    url = f"{config.moonraker_api_method}://{config.moonraker_ip}:{config.moonraker_port}/printer/info"
+    headers = {}
+    if config.moonraker_api_key:
+        headers["X-Api-Key"] = config.moonraker_api_key
+    
+    # Test connection directly without saving to DB
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers, timeout=10) as response:
+                if response.status == 200:
+                    logger.info("Moonraker connection successful ip=%s", config.moonraker_ip)
+                    return {"success": True, "message": "Connection successful"}
+                logger.warning("Moonraker connection failed ip=%s status=%s", config.moonraker_ip, response.status)
+                return {"success": False, "message": f"Moonraker returned status {response.status}"}
+    except aiohttp.ClientConnectorError as e:
+        logger.warning("Moonraker connection error ip=%s error=%s", config.moonraker_ip, str(e))
+        return {"success": False, "message": f"Connection error: {str(e)}"}
+    except asyncio.TimeoutError:
+        logger.warning("Moonraker connection timeout ip=%s", config.moonraker_ip)
+        return {"success": False, "message": "Connection timeout"}
+    except Exception as e:
+        logger.error("Moonraker connection exception ip=%s error=%s", config.moonraker_ip, str(e))
+        return {"success": False, "message": f"Error: {str(e)}"}
 
 
 @router.get("/moonraker/get-objects-list")
