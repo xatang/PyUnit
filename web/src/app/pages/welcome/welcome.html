@@ -1,0 +1,159 @@
+<div class="mb-4"></div>
+
+<div class="container">
+    <div class="card config-card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-rocket-takeoff me-2"></i>Welcome to PyUnit!
+            </h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-4">
+                Let's get your filament dryer system up and running in just a few steps
+            </p>
+
+            <!-- Loading state -->
+            <div *ngIf="isCheckingStatus" class="text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Checking setup status...</span>
+                </div>
+                <p class="text-muted">Checking your setup status...</p>
+            </div>
+
+            <!-- Setup steps -->
+            <div *ngIf="!isCheckingStatus">
+
+                <!-- Step 1: Moonraker Configuration -->
+                <div class="card mb-3" [class.border-success]="moonrakerConfigured" [class.border-primary]="currentStep === 1 && !moonrakerConfigured">
+                    <div class="card-header" [class.bg-success]="moonrakerConfigured" [class.bg-primary]="currentStep === 1 && !moonrakerConfigured" [class.bg-light]="currentStep !== 1 && !moonrakerConfigured" [class.text-white]="moonrakerConfigured || currentStep === 1">
+                        <h6 class="mb-0">
+                            <i *ngIf="!moonrakerConfigured" class="bi bi-1-circle me-2"></i>
+                            <i *ngIf="moonrakerConfigured" class="bi bi-check-circle-fill me-2"></i>
+                            Configure Moonraker Connection
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-2">
+                            Connect PyUnit to your Klipper's Moonraker API
+                        </p>
+
+                        <div *ngIf="!moonrakerConfigured">
+                            <p class="mb-3">
+                                You need to configure the connection to your Moonraker server.
+                                This allows PyUnit to communicate with your 3D printer's control system.
+                            </p>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>What you'll need:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Moonraker IP address (e.g., 192.168.1.100 or 127.0.0.1 for local setup)</li>
+                                    <li>Port number (usually 7125)</li>
+                                    <li>API key (optional, if configured)</li>
+                                </ul>
+                            </div>
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Note for Docker users:</strong>
+                                If running in Docker, use the actual network IP address of your machine running Moonraker
+                                (e.g., 192.168.1.100), not <code>127.0.0.1</code> or <code>localhost</code>.
+                            </div>
+                            <button class="btn btn-primary w-100 mt-3" (click)="goToMoonrakerConfig()">
+                                <i class="bi bi-sliders me-2"></i>
+                                Configure Moonraker
+                            </button>
+                        </div>
+
+                        <div *ngIf="moonrakerConfigured">
+                            <div class="alert alert-success mb-0">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Moonraker connection is configured!
+                            </div>
+                            <div class="alert alert-warning mt-3 mb-0" *ngIf="moonrakerIsLocalhost">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Warning:</strong> You are using <code>127.0.0.1</code> or <code>localhost</code>.
+                                This will NOT work if PyUnit is running in Docker.
+                                <a href="/configs/moonraker" class="alert-link">Update to your network IP</a> if needed.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Add First Dryer -->
+                <div class="card mb-3" [class.border-success]="dryersExist" [class.border-primary]="currentStep === 2 && !dryersExist" [class.opacity-50]="!moonrakerConfigured">
+                    <div class="card-header" [class.bg-success]="dryersExist" [class.bg-primary]="currentStep === 2 && !dryersExist" [class.bg-light]="currentStep !== 2 && !dryersExist" [class.text-white]="dryersExist || currentStep === 2">
+                        <h6 class="mb-0">
+                            <i *ngIf="!dryersExist" class="bi bi-2-circle me-2"></i>
+                            <i *ngIf="dryersExist" class="bi bi-check-circle-fill me-2"></i>
+                            Add Your First Dryer Unit
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-2">
+                            Configure your filament dryer hardware
+                        </p>
+
+                        <div *ngIf="!dryersExist">
+                            <p class="mb-3">
+                                Now let's set up your first dryer unit. You'll configure the heater,
+                                fan, temperature sensor, humidity settings, LED, and servo.
+                            </p>
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Important:</strong> Make sure all components (heater, fan, sensors, etc.)
+                                are already configured in your Klipper configuration file.
+                            </div>
+                            <button class="btn btn-primary w-100 mt-3" (click)="goToDryerConfig()" [disabled]="!moonrakerConfigured">
+                                <i class="bi bi-gear me-2"></i>
+                                Add Dryer Unit
+                            </button>
+                        </div>
+
+                        <div *ngIf="dryersExist">
+                            <div class="alert alert-success mb-0">
+                                <i class="bi bi-check-circle me-2"></i>
+                                At least one dryer unit is configured!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Ready to go -->
+                <div class="card mb-3" [class.border-success]="moonrakerConfigured && dryersExist">
+                    <div class="card-header" [class.bg-success]="moonrakerConfigured && dryersExist" [class.bg-light]="!moonrakerConfigured || !dryersExist" [class.text-white]="moonrakerConfigured && dryersExist">
+                        <h6 class="mb-0">
+                            <i class="bi bi-3-circle me-2"></i>
+                            Start Using PyUnit
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-2">
+                            Your system is ready!
+                        </p>
+
+                        <div *ngIf="moonrakerConfigured && dryersExist">
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle me-2"></i>
+                                <strong>Setup complete!</strong> You're ready to start drying filament.
+                            </div>
+                            <button class="btn btn-success w-100 mt-3" (click)="goToDashboard()">
+                                <i class="bi bi-speedometer2 me-2"></i>
+                                Go to Dashboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Refresh and Skip buttons -->
+            <div class="text-center mt-4" *ngIf="!isCheckingStatus">
+                <button class="btn btn-outline-primary me-2" (click)="checkSetupStatus()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+                    Refresh Status
+                </button>
+                <button class="btn btn-link text-muted" (click)="skipSetup()">
+                    Skip setup for now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

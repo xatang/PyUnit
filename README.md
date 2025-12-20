@@ -64,6 +64,32 @@ The script will automatically:
 
 **Installation time:** 1-3 minutes (no compilation required!)
 
+### First-Time Setup Wizard
+
+On your first visit to PyUnit, you'll be greeted by a **3-step setup wizard** that guides you through initial configuration:
+
+#### Step 1: Configure Moonraker Connection
+- Enter your Moonraker IP address
+  - **For Docker users:** Use your machine's network IP (e.g., `192.168.1.100`)
+  - **For local installations:** You can use `127.0.0.1`
+- Default port: `7125`
+- Test connection before saving
+
+#### Step 2: Add Your First Dryer
+- Configure all hardware components:
+  - Heater (must be configured in Klipper)
+  - Fan (PWM control)
+  - Temperature and humidity sensor
+  - LED indicators
+  - Servo door control
+- All components must be pre-configured in your Klipper configuration
+
+#### Step 3: Start Using PyUnit
+- Once configured, access the dashboard
+- Monitor and control your dryer units
+
+**Note:** The wizard can be skipped using "Skip setup for now" if you want to configure manually later.
+
 ### Requirements
 
 - **OS:** Linux (Ubuntu, Debian, Raspbian, Armbian)

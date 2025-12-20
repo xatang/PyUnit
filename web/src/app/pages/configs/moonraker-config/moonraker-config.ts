@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastService } from '../../../services/toast';
 import { MoonrakerConfigService, MoonrakerConfig } from './moonraker-config.service';
 import { LoggingService } from '../../../services/logging.service';
@@ -17,17 +18,22 @@ export class MoonrakerConfigPage implements OnInit {
   isTesting = false;
   testResult: { success: boolean; message: string } | null = null;
   showApiKey = false;
+  isFromWelcome = false;
 
   constructor(
     private fb: FormBuilder,
     private moonrakerConfigService: MoonrakerConfigService,
     private toastService: ToastService,
-    private logger: LoggingService
+    private logger: LoggingService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.initForm();
     this.loadConfig();
+    // Check if coming from welcome page
+    this.isFromWelcome = this.route.snapshot.queryParamMap.get('from') === 'welcome';
   }
 
   private initForm(): void {
@@ -62,6 +68,14 @@ export class MoonrakerConfigPage implements OnInit {
         this.logger.info('MoonrakerConfig', 'Config saved successfully', response);
         this.isLoading = false;
         this.toastService.show('Configuration saved successfully!', { classname: 'bg-success text-light', delay: 3000 });
+
+        // Check if coming from welcome page, redirect to dryer config
+        const fromWelcome = this.route.snapshot.queryParamMap.get('from') === 'welcome';
+        if (fromWelcome) {
+          setTimeout(() => {
+            this.router.navigate(['/welcome']);
+          }, 1000);
+        }
       },
       error: (error) => {
         this.logger.error('MoonrakerConfig', 'Error saving config', error);
@@ -97,5 +111,9 @@ export class MoonrakerConfigPage implements OnInit {
 
   toggleApiKeyVisibility(): void {
     this.showApiKey = !this.showApiKey;
+  }
+
+  backToWelcome(): void {
+    this.router.navigate(['/welcome']);
   }
 }

@@ -5,7 +5,7 @@
         </h5>
     </div>
     <div class="card-body position-relative" style="min-height: 500px;">
-        <!-- Индикатор загрузки -->
+        <!-- Loading indicator -->
         <div class="loading-overlay"
              [class.loading-visible]="isLoading"
              [class.loading-hidden]="!isLoading">
@@ -17,12 +17,12 @@
             </div>
         </div>
 
-        <!-- Основной контент -->
+        <!-- Main content -->
         <div class="content-container"
              [class.content-visible]="!isLoading"
              [class.content-hidden]="isLoading">
 
-            <!-- Список сушилок -->
+            <!-- List of dryers -->
             <div class="mb-4" *ngIf="dryers.length > 0">
                 <h6 class="mb-3">Existing Dryer Units</h6>
                 <div class="list-group">
@@ -37,11 +37,11 @@
                 </div>
             </div>
 
-            <!-- Форма добавления/редактирования -->
+            <!-- Add/Edit form -->
             <h6 class="mb-3">{{ editingDryer ? 'Edit Dryer Unit' : 'Add New Dryer Unit' }}</h6>
             <form id="dryerForm" [formGroup]="dryerForm" (ngSubmit)="onSubmit()">
 
-                <!-- Название сушилки -->
+                <!-- Dryer name -->
                 <div class="mb-3">
                     <label for="dryerName" class="form-label required-field">Dryer Name</label>
                     <input type="text" class="form-control" id="dryerName"
@@ -53,7 +53,7 @@
                     </div>
                 </div>
 
-                <!-- Конфигурация нагревателя -->
+                <!-- Heater configuration -->
                 <div class="card mb-3" formGroupName="config">
                     <div class="card-header bg-primary">
                         <h6 class="mb-0">Heater Configuration</h6>
@@ -94,7 +94,7 @@
                     </div>
                 </div>
 
-                <!-- Конфигурация LED -->
+                <!-- LED configuration -->
                 <div class="card mb-3" formGroupName="config">
                     <div class="card-header bg-primary">
                         <h6 class="mb-0">LED Configuration</h6>
@@ -132,7 +132,7 @@
                     </div>
                 </div>
 
-                <!-- Конфигурация влажности -->
+                <!-- Humidity configuration -->
                 <div class="card mb-3" formGroupName="config">
                     <div class="card-header bg-primary">
                         <h6 class="mb-0">Humidity Configuration</h6>
@@ -208,31 +208,31 @@
                     </div>
                 </div>
 
-                <!-- Конфигурация температуры -->
+                <!-- Temperature configuration -->
                 <div class="card mb-3" formGroupName="config">
                     <div class="card-header bg-primary">
                         <h6 class="mb-0">Temperature Configuration</h6>
                     </div>
                     <div class="card-body" formGroupName="temperature">
                         <div class="mb-3">
-                            <label for="tempSensor" class="form-label required-field">Temperature Sensor Name</label>
+                            <label for="tempSensor" class="form-label required-field">Air Temperature and Humidity Sensor Name</label>
                             <select class="form-select" id="tempSensor"
                                    formControlName="sensor_name"
                                    [class.is-invalid]="temperatureControls['sensor_name'].invalid && (temperatureControls['sensor_name'].dirty || temperatureControls['sensor_name'].touched)">
-                                <option value="">Select Temperature Sensor</option>
+                                <option value="">Select Air Temperature and Humidity Sensor</option>
                                 <option *ngFor="let sensor of temperatureSensors" [value]="sensor">{{ sensor }}</option>
                             </select>
                             <div *ngIf="temperatureControls['sensor_name'].invalid && (temperatureControls['sensor_name'].dirty || temperatureControls['sensor_name'].touched)" class="invalid-feedback">
-                                Temperature sensor name is required
+                                Air temperature and humidity sensor name is required
                             </div>
                             <div class="form-text" *ngIf="temperatureSensors.length === 0">
-                                No temperature sensors found. Make sure sensors are configured in Moonraker.
+                                No air temperature and humidity sensors found. Make sure sensors are configured in Moonraker.
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Конфигурация серво -->
+                <!-- Servo configuration -->
                 <div class="card mb-3" formGroupName="config">
                     <div class="card-header bg-primary">
                         <h6 class="mb-0">Servo Configuration</h6>
@@ -322,8 +322,14 @@
                     </div>
                 </div>
 
-                <!-- Кнопки действий -->
+                <!-- Action buttons -->
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button *ngIf="isFromWelcome" type="button" class="btn btn-outline-primary me-md-2"
+                            (click)="backToWelcome()"
+                            [disabled]="isSaving">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Back to Setup
+                    </button>
                     <button type="button" class="btn btn-outline-secondary me-md-2"
                             (click)="resetForm()"
                             [disabled]="isSaving">
