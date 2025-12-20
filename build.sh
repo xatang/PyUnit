@@ -14,7 +14,7 @@ echo ""
 # Configuration - CHANGE THIS!
 DOCKER_USERNAME="xatang"  # Your Docker Hub username
 DOCKER_IMAGE="${DOCKER_USERNAME}/pyunit"
-VERSION="latest"  # or use version like "2.0.0"
+VERSION="latest"  # or use version like "2.0.1"
 
 echo "Docker Image: ${DOCKER_IMAGE}:${VERSION}"
 echo ""
