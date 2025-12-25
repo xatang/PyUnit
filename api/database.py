@@ -145,8 +145,8 @@ async def seed_db():
 
             has_moonraker = (await session.execute(MoonrakerConfig.__table__.select().limit(1))).first() is not None
             if not has_moonraker:
-                db_logger.info("Seeding default Moonraker config (127.0.0.2)")
-                session.add(MoonrakerConfig(moonraker_ip="127.0.0.2"))
+                db_logger.info("Seeding default Moonraker config (172.17.0.1)")
+                session.add(MoonrakerConfig(moonraker_ip="172.17.0.1"))
 
             await session.commit()
         except Exception:

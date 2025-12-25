@@ -21,36 +21,43 @@ export const setupGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  // First check if moonraker is configured properly
+  // First check if moonraker is configured properly by testing actual connection
   return http.get<any>(`${apiUrl}/config/moonraker`).pipe(
     switchMap(config => {
-      // Check if IP is not default invalid value (127.0.0.2)
-      const moonrakerConfigured = config &&
-                                  config.moonraker_ip &&
-                                  config.moonraker_ip !== '' &&
-                                  config.moonraker_ip !== '127.0.0.2';
+      // Test actual connection to Moonraker
+      return http.post<any>(`${apiUrl}/config/moonraker/test-connection`, config).pipe(
+        switchMap(testResult => {
+          const moonrakerConfigured = testResult.success === true;
 
-      if (!moonrakerConfigured) {
-        // Moonraker not configured, redirect to welcome
-        router.navigate(['/welcome']);
-        return of(false);
-      }
-
-      // Moonraker is configured, check if dryers exist
-      return http.get<any[]>(`${apiUrl}/common/units`).pipe(
-        map(dryers => {
-          if (dryers && dryers.length > 0) {
-            // Setup is complete
-            return true;
-          } else {
-            // No dryers found, redirect to welcome page
+          if (!moonrakerConfigured) {
+            // Moonraker not configured or connection failed, redirect to welcome
             router.navigate(['/welcome']);
-            return false;
+            return of(false);
           }
+
+          // Moonraker is configured, check if dryers exist
+          return http.get<any[]>(`${apiUrl}/common/units`).pipe(
+            map(dryers => {
+              if (dryers && dryers.length > 0) {
+                // Setup is complete
+                return true;
+              } else {
+                // No dryers found, redirect to welcome page
+                router.navigate(['/welcome']);
+                return false;
+              }
+            }),
+            catchError(error => {
+              // On error, redirect to welcome page
+              console.error('Dryers check failed:', error);
+              router.navigate(['/welcome']);
+              return of(false);
+            })
+          );
         }),
         catchError(error => {
-          // On error, redirect to welcome page
-          console.error('Dryers check failed:', error);
+          // Moonraker test connection failed, redirect to welcome
+          console.error('Moonraker test connection failed:', error);
           router.navigate(['/welcome']);
           return of(false);
         })
