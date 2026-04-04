@@ -159,12 +159,12 @@ export class DryerChartEmbed implements OnInit, OnDestroy {
       yAxis: [
         {
           title: { text: 'Temperature (°C)', style: { color: '#dedce0' } },
-          labels: { style: { color: '#dedce0' } },
+          labels: { style: { color: '#dedce0' } }, min:0,
           gridLineColor: '#31373c'
         },
         {
           title: { text: 'Humidity (%)', style: { color: '#dedce0' } },
-          labels: { style: { color: '#dedce0' } },
+          labels: { style: { color: '#dedce0' } }, min:0,
           max: 100,
           opposite: true,
           gridLineColor: '#31373c'

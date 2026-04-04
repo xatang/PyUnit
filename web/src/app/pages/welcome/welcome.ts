@@ -48,43 +48,53 @@ export class WelcomePage implements OnInit, OnDestroy {
     console.log('Checking setup status...');
     this.isCheckingStatus = true;
 
-    // Check if moonraker is configured
+    // Check if moonraker is configured by testing actual connection
     this.http.get<any>(`${environment.apiUrl}/config/moonraker`).subscribe({
       next: (config) => {
         console.log('Moonraker config:', config);
-        // Check if IP is not default invalid value (127.0.0.2)
-        this.moonrakerConfigured = config &&
-                                   config.moonraker_ip &&
-                                   config.moonraker_ip !== '' &&
-                                   config.moonraker_ip !== '127.0.0.2';
-        // Check if using localhost (warning for Docker users)
-        this.moonrakerIsLocalhost = config &&
-                                    (config.moonraker_ip === '127.0.0.1' ||
-                                     config.moonraker_ip === 'localhost');
-        console.log('Moonraker configured:', this.moonrakerConfigured);
-        console.log('Moonraker is localhost:', this.moonrakerIsLocalhost);
 
-        // Check if dryers exist
-        this.http.get<any[]>(`${environment.apiUrl}/common/units`).subscribe({
-          next: (dryers) => {
-            console.log('Dryers:', dryers);
-            this.dryersExist = dryers && dryers.length > 0;
-            console.log('Dryers exist:', this.dryersExist);
-            this.isCheckingStatus = false;
+        // Test actual connection to Moonraker
+        this.http.post<any>(`${environment.apiUrl}/config/moonraker/test-connection`, config).subscribe({
+          next: (testResult) => {
+            console.log('Moonraker test connection result:', testResult);
+            this.moonrakerConfigured = testResult.success === true;
 
-            // Determine current step
-            if (!this.moonrakerConfigured) {
-              this.currentStep = 1;
-            } else if (!this.dryersExist) {
-              this.currentStep = 2;
-            } else {
-              // Both configured, show step 3 (Ready!)
-              this.currentStep = 3;
-            }
-            console.log('Current step:', this.currentStep);
+            // Check if using localhost (warning for Docker users)
+            this.moonrakerIsLocalhost = config &&
+                                        (config.moonraker_ip === '127.0.0.1' ||
+                                         config.moonraker_ip === 'localhost');
+            console.log('Moonraker configured:', this.moonrakerConfigured);
+            console.log('Moonraker is localhost:', this.moonrakerIsLocalhost);
+
+            // Check if dryers exist
+            this.http.get<any[]>(`${environment.apiUrl}/common/units`).subscribe({
+              next: (dryers) => {
+                console.log('Dryers:', dryers);
+                this.dryersExist = dryers && dryers.length > 0;
+                console.log('Dryers exist:', this.dryersExist);
+                this.isCheckingStatus = false;
+
+                // Determine current step
+                if (!this.moonrakerConfigured) {
+                  this.currentStep = 1;
+                } else if (!this.dryersExist) {
+                  this.currentStep = 2;
+                } else {
+                  // Both configured, show step 3 (Ready!)
+                  this.currentStep = 3;
+                }
+                console.log('Current step:', this.currentStep);
+              },
+              error: (err) => {
+                console.error('Error fetching dryers:', err);
+                this.isCheckingStatus = false;
+                this.currentStep = 1;
+              }
+            });
           },
           error: (err) => {
-            console.error('Error fetching dryers:', err);
+            console.error('Moonraker test connection failed:', err);
+            this.moonrakerConfigured = false;
             this.isCheckingStatus = false;
             this.currentStep = 1;
           }

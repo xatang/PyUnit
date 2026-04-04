@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="PyUnit",
     description="Api for PyUnit",
-    version="2.0.2",
+    version="2.0.3",
     debug=True,
     lifespan=lifespan
 )

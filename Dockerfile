@@ -7,14 +7,27 @@ ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    build-essential \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# NodeSource does not support armhf (arm/v7, arm/v8 in buildx).
+# Use NodeSource on amd64/arm64, Debian nodejs on other arches.
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y \
+        curl \
+        git \
+        build-essential \
+        ca-certificates \
+        gnupg; \
+    ARCH="$(dpkg --print-architecture)"; \
+    if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "arm64" ]; then \
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -; \
+        apt-get install -y nodejs; \
+    else \
+        apt-get install -y nodejs npm; \
+    fi; \
+    node --version; \
+    npm --version; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y \
     libffi-dev \
