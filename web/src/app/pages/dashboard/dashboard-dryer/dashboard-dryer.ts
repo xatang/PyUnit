@@ -131,8 +131,8 @@ export class DashboardDryer implements OnInit, OnDestroy {
       legend: { enabled: true, itemStyle: { color: '#dedce0' }, itemHoverStyle: { color: '#fff' }, itemHiddenStyle: { color: '#6d6f73' } },
       xAxis: { type: 'datetime', labels: { style: { color: '#dedce0' } }, lineColor: '#3a4247', tickColor: '#3a4247', dateTimeLabelFormats: { hour: '%d.%m %H:%M', minute: '%H:%M', second: '%H:%M:%S' } },
       yAxis: [
-        { title: { text: 'Temperature (°C)', style: { color: '#dedce0' } }, labels: { style: { color: '#dedce0' } }, gridLineColor: '#31373c' },
-        { title: { text: 'Humidity (%)', style: { color: '#dedce0' } }, labels: { style: { color: '#dedce0' } }, max:100, opposite: true, gridLineColor: '#31373c' }
+        { title: { text: 'Temperature (°C)', style: { color: '#dedce0' } }, labels: { style: { color: '#dedce0' } }, min:0, gridLineColor: '#31373c' },
+        { title: { text: 'Humidity (%)', style: { color: '#dedce0' } }, labels: { style: { color: '#dedce0' } }, min:0, max:100, opposite: true, gridLineColor: '#31373c' }
       ],
       tooltip: {
         shared: true,

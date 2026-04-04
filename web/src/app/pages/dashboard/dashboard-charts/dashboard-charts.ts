@@ -139,8 +139,8 @@ export class DashboardChartsPage implements OnInit, OnDestroy {
       legend: { align: 'center', verticalAlign: 'bottom', itemStyle: { color: '#dedce0' }, itemHoverStyle: { color: '#ffffff' }, itemHiddenStyle: { color: '#6d6f73' } },
       xAxis: { type: 'datetime', labels: { style: { color: '#dedce0' } }, lineColor: '#3a4247', tickColor: '#3a4247', dateTimeLabelFormats: { hour: '%d.%m %H:%M', day: '%d.%m %H:%M', minute: '%H:%M', second: '%H:%M:%S' } },
       yAxis: [
-        { title: { text: 'Temperature (°C)', style: { color: '#dedce0' } }, labels: { style: { color: '#dedce0' } }, opposite: false, gridLineColor: '#31373c', lineColor: '#3a4247', tickColor: '#3a4247' },
-        { title: { text: 'Humidity (%)', style: { color: '#dedce0' } }, labels: { style: { color: '#dedce0' } }, max: 100, opposite: true, gridLineColor: '#31373c', lineColor: '#3a4247', tickColor: '#3a4247' }
+        { title: { text: 'Temperature (°C)', style: { color: '#dedce0' } }, labels: { style: { color: '#dedce0' } }, min: 0, opposite: false, gridLineColor: '#31373c', lineColor: '#3a4247', tickColor: '#3a4247' },
+        { title: { text: 'Humidity (%)', style: { color: '#dedce0' } }, labels: { style: { color: '#dedce0' } }, min: 0, max: 100, opposite: true, gridLineColor: '#31373c', lineColor: '#3a4247', tickColor: '#3a4247' }
       ],
       tooltip: {
         shared: true,
